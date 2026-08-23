@@ -110,15 +110,15 @@ Nche stays outside the money-moving rail at all times.
 
 ```mermaid
 flowchart LR
-    Behaviour ──────────┐
-    Device ─────────────┤
-    Sequence ───────────┤
-    Transaction ────────┤
-    Beneficiary ────────┼──► Risk Fusion
-    SIM Risk (optional) ┤
-    Network ────────────┘
-    Risk Fusion --> Score[Risk Score]
-    Score --> D[ALLOW / CHALLENGE / BLOCK / REVIEW]
+    B[Behaviour] --> RF[Risk Fusion]
+    DEV[Device] --> RF
+    SEQ[Sequence] --> RF
+    TX[Transaction] --> RF
+    BEN[Beneficiary] --> RF
+    SIM["SIM Risk - optional"] --> RF
+    NET[Network] --> RF
+    RF --> SCORE[Risk Score]
+    SCORE --> D["ALLOW / CHALLENGE / BLOCK / REVIEW"]
 ```
 
 **SIM risk is an enrichment signal, not a dependency.** Nche functions fully with `SIM Risk = UNKNOWN`. Where SIM-swap intelligence is available (e.g. via NIBSS's Industry SIM Swap Service), it improves confidence — it is never required for a decision. The UI marks its provenance explicitly:
