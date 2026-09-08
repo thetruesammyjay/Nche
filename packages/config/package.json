@@ -1,0 +1,6 @@
+{
+  "name": "@nche/config",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": { "lint": "echo config-ok", "typecheck": "echo config-ok", "test": "echo config-ok" }
+}

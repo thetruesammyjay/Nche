@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+.turbo/
+
+# Next.js / Vercel
+apps/web/.next/
+apps/web/out/
+apps/web/.vercel/
+
+# Python / uv
+__pycache__/
+*.py[cod]
+.venv/
+apps/api/.venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+apps/web/.env.local
+apps/api/.env
+
+# Generated data and reports
+data/synthetic/generated/
+*.parquet
+*.feather
+*.sqlite3
+*.db
+reports/generated/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Project planning artifact intentionally excluded from version control
+FILE-STRUCTURE.md

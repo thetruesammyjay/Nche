@@ -1,0 +1,19 @@
+{
+  "name": "nche",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@9.15.5",
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "typecheck": "turbo typecheck",
+    "test": "turbo test",
+    "api:test": "cd apps/api && uv run pytest",
+    "data:generate": "cd apps/api && uv run python -m nche.simulator.generator",
+    "evaluate": "cd apps/api && uv run python -m nche.evaluation.harness"
+  },
+  "devDependencies": {
+    "turbo": "^2.3.3"
+  }
+}

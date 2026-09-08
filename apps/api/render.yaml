@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: nche-api
+    runtime: docker
+    rootDir: apps/api
+    dockerfilePath: ./Dockerfile

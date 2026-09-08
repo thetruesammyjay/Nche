@@ -1,0 +1,8 @@
+import Link from "next/link";
+import { PageIntro } from "../../../components/command-ui";
+
+const cases = [{ id: "case_4b19", customer: "customer_7fd9a2", title: "Account takeover sequence", score: "96", decision: "BLOCK", time: "2m ago" }, { id: "case_4b17", customer: "customer_2a9c10", title: "Recovery + PIN change", score: "84", decision: "REVIEW", time: "14m ago" }, { id: "case_4b03", customer: "customer_1de88f", title: "Beneficiary novelty", score: "78", decision: "REVIEW", time: "28m ago" }];
+
+export default function InvestigationsPage() {
+  return <div className="dashboard-page"><PageIntro eyebrow="Nche Command / Investigations" title="Investigations" description="Cases where the evidence needs a human reading." action={<button className="cyan-button">New investigation <span>+</span></button>} /><section className="panel case-list"><div className="list-heading"><span>Open cases <b>12</b></span><button className="quiet-control">Sort by risk⌄</button></div>{cases.map((item) => <Link className="case-list-row" href={`/investigations/${item.id}`} key={item.id}><span className="case-severity">{item.score}</span><span className="case-list-copy"><strong>{item.title}</strong><small className="mono">{item.customer} · {item.id}</small></span><span className={`decision-text decision-${item.decision.toLowerCase()}`}>{item.decision}</span><span className="muted">{item.time}</span><span className="row-arrow">→</span></Link>)}</section></div>;
+}
