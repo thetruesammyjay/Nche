@@ -4,15 +4,29 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_file=(".env", "apps/api/.env"),
+        env_file_encoding="utf-8",
+        extra="ignore",
+        case_sensitive=False,
+    )
 
     nche_env: str = "development"
     cors_origins: str = "http://localhost:3000"
     sim_risk_source: str = "SIMULATED"
+    database_url: str | None = None
+    database_required: bool = False
+    db_pool_size: int = 5
+    db_max_overflow: int = 5
+    log_level: str = "INFO"
 
     @property
     def cors_origin_list(self) -> list[str]:
         return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
+
+    @property
+    def is_production(self) -> bool:
+        return self.nche_env.lower() == "production"
 
 
 @lru_cache

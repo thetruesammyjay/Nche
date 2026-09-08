@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import uuid4
 
 from nche.schemas.risk import Decision, Evidence, RiskEvaluation, RiskLevel, RiskRequest
@@ -21,5 +21,5 @@ def evaluate(request: RiskRequest) -> RiskEvaluation:
         primary_reason="account_takeover_sequence" if len(reasons) >= 3 else "behavioural_deviation",
         evidence=evidence,
         model_version="nche-risk-v0.1.0",
-        created_at=datetime.now(timezone.utc),
+        created_at=datetime.now(UTC),
     )

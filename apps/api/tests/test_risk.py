@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from nche.engine.risk_fusion import evaluate
 from nche.schemas.events import EventChannel, EventName, NcheEvent
@@ -6,7 +6,7 @@ from nche.schemas.risk import Decision, RiskRequest
 
 
 def test_takeover_sequence_blocks() -> None:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     events = [
         NcheEvent(event_id="1", customer_ref="customer_test", event_name=EventName.NEW_DEVICE_LOGIN, channel=EventChannel.WEB, occurred_at=now),
         NcheEvent(event_id="2", customer_ref="customer_test", event_name=EventName.PASSWORD_RESET, channel=EventChannel.WEB, occurred_at=now),

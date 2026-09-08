@@ -1,10 +1,10 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from nche.schemas.events import EventChannel, EventName, NcheEvent
 
 
 def takeover_sequence(customer_ref: str = "customer_demo") -> list[NcheEvent]:
-    start = datetime.now(timezone.utc)
+    start = datetime.now(UTC)
     events = [
         (EventName.NEW_DEVICE_LOGIN, 0),
         (EventName.PASSWORD_RESET, 53),
