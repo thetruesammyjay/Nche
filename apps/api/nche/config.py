@@ -3,8 +3,9 @@ from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-_REPO_ROOT = Path(__file__).resolve().parents[3]
-_API_ROOT = Path(__file__).resolve().parents[1]
+_CONFIG_DIR = Path(__file__).resolve().parent
+_API_ROOT = _CONFIG_DIR.parent
+_REPO_ROOT = _API_ROOT.parent.parent
 
 
 class Settings(BaseSettings):

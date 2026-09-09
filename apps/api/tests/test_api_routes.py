@@ -2,6 +2,7 @@ from datetime import UTC, datetime
 
 from fastapi.testclient import TestClient
 
+from nche.db.repositories import InMemoryRepository
 from nche.main import app
 
 
@@ -19,6 +20,7 @@ def test_risk_endpoint_persists_explanation_in_local_repository() -> None:
         ],
     }
     with TestClient(app) as client:
+        app.state.repository = InMemoryRepository()
         response = client.post("/risk/evaluate", json=payload)
         assert response.status_code == 200
         evaluation_id = response.json()["evaluation_id"]
