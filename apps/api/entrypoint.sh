@@ -2,10 +2,10 @@
 set -eu
 
 if [ -n "${DATABASE_URL:-}" ]; then
-  uv run --no-sync alembic upgrade head
+  /app/.venv/bin/alembic upgrade head
 fi
 
-exec uv run --no-sync uvicorn nche.main:app \
+exec /app/.venv/bin/uvicorn nche.main:app \
   --host 0.0.0.0 \
   --port "${PORT:-8000}" \
   --proxy-headers \
