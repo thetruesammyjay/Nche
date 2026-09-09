@@ -33,6 +33,9 @@ def normalize_database_url(database_url: str) -> tuple[str, dict[str, Any]]:
     connect_args: dict[str, Any] = {}
     if sslmode in {"require", "verify-ca", "verify-full"}:
         connect_args["ssl"] = "require"
+    if "pooler" in (parts.hostname or ""):
+        # Neon transaction poolers do not preserve asyncpg prepared statements.
+        connect_args["statement_cache_size"] = 0
     return normalized, connect_args
 
 
