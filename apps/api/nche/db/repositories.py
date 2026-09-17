@@ -13,21 +13,40 @@ from .models import EvaluationRecord, EventRecord
 
 
 class EvaluationRepository(Protocol):
-    async def save_evaluation(self, customer_ref: str, institution_ref: str | None, evaluation: RiskEvaluation) -> None: ...
+    async def save_evaluation(
+        self,
+        customer_ref: str,
+        institution_ref: str | None,
+        evaluation: RiskEvaluation,
+        idempotency_key: str | None = None,
+    ) -> None: ...
     async def get_evaluation(self, evaluation_id: str) -> RiskEvaluation | None: ...
+    async def get_evaluation_by_idempotency_key(self, idempotency_key: str) -> RiskEvaluation | None: ...
     async def save_event(self, event: NcheEvent) -> None: ...
 
 
 class InMemoryRepository:
     def __init__(self) -> None:
         self.evaluations: dict[str, RiskEvaluation] = {}
+        self.idempotency_keys: dict[str, RiskEvaluation] = {}
         self.events: dict[str, NcheEvent] = {}
 
-    async def save_evaluation(self, customer_ref: str, institution_ref: str | None, evaluation: RiskEvaluation) -> None:
+    async def save_evaluation(
+        self,
+        customer_ref: str,
+        institution_ref: str | None,
+        evaluation: RiskEvaluation,
+        idempotency_key: str | None = None,
+    ) -> None:
         self.evaluations[evaluation.evaluation_id] = evaluation
+        if idempotency_key:
+            self.idempotency_keys[idempotency_key] = evaluation
 
     async def get_evaluation(self, evaluation_id: str) -> RiskEvaluation | None:
         return self.evaluations.get(evaluation_id)
+
+    async def get_evaluation_by_idempotency_key(self, idempotency_key: str) -> RiskEvaluation | None:
+        return self.idempotency_keys.get(idempotency_key)
 
     async def save_event(self, event: NcheEvent) -> None:
         self.events[event.event_id] = event
@@ -37,7 +56,13 @@ class PostgresRepository:
     def __init__(self, database: Database) -> None:
         self.database = database
 
-    async def save_evaluation(self, customer_ref: str, institution_ref: str | None, evaluation: RiskEvaluation) -> None:
+    async def save_evaluation(
+        self,
+        customer_ref: str,
+        institution_ref: str | None,
+        evaluation: RiskEvaluation,
+        idempotency_key: str | None = None,
+    ) -> None:
         async with self.database.session() as session:
             record = EvaluationRecord(
                 evaluation_id=evaluation.evaluation_id,
@@ -46,14 +71,32 @@ class PostgresRepository:
                 decision=evaluation.decision.value,
                 risk_score=evaluation.risk_score,
                 created_at=evaluation.created_at,
+                idempotency_key=idempotency_key,
                 payload=evaluation.model_dump(mode="json"),
             )
             session.add(record)
-            await session.commit()
+            try:
+                await session.commit()
+            except IntegrityError:
+                await session.rollback()
+                if not idempotency_key:
+                    raise
+                existing = await session.scalar(
+                    select(EvaluationRecord).where(EvaluationRecord.idempotency_key == idempotency_key)
+                )
+                if existing is None:
+                    raise
 
     async def get_evaluation(self, evaluation_id: str) -> RiskEvaluation | None:
         async with self.database.session() as session:
             record = await session.scalar(select(EvaluationRecord).where(EvaluationRecord.evaluation_id == evaluation_id))
+            return RiskEvaluation.model_validate(record.payload) if record else None
+
+    async def get_evaluation_by_idempotency_key(self, idempotency_key: str) -> RiskEvaluation | None:
+        async with self.database.session() as session:
+            record = await session.scalar(
+                select(EvaluationRecord).where(EvaluationRecord.idempotency_key == idempotency_key)
+            )
             return RiskEvaluation.model_validate(record.payload) if record else None
 
     async def save_event(self, event: NcheEvent) -> None:

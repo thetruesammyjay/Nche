@@ -7,7 +7,7 @@ import { DecisionBadge, RiskScore } from "@nche/ui";
 
 type Alert = { id: string; customer: string; channel: string; score: number; level: "high" | "critical"; decision: Decision; reason: string; time: string; status: string };
 const alerts: Alert[] = [
-  { id: "ALT-4B19", customer: "customer_7fd9a2", channel: "WEB", score: 96, level: "critical", decision: "BLOCK", reason: "Account takeover sequence", time: "2m ago", status: "New" },
+  { id: "ALT-4B19", customer: "customer_7fd9a2", channel: "WEB", score: 90, level: "critical", decision: "BLOCK", reason: "Account takeover sequence", time: "2m ago", status: "New" },
   { id: "ALT-4B17", customer: "customer_2a9c10", channel: "USSD", score: 84, level: "critical", decision: "REVIEW", reason: "Recovery + PIN change", time: "14m ago", status: "Assigned" },
   { id: "ALT-4B03", customer: "customer_1de88f", channel: "MOBILE", score: 78, level: "high", decision: "REVIEW", reason: "Beneficiary novelty", time: "28m ago", status: "New" },
   { id: "ALT-4AF2", customer: "customer_91bc20", channel: "WEB", score: 73, level: "high", decision: "CHALLENGE", reason: "Unusual transfer velocity", time: "41m ago", status: "Assigned" },

@@ -14,5 +14,5 @@ export function DecisionLegend() {
 }
 
 export function InvestigationHero({ score, decision, level, title, description }: { score: number; decision: Decision; level: RiskLevel; title: string; description: string }) {
-  return <div className="investigation-hero"><div className="hero-status"><RiskScore score={score} decision={decision} level={level} /><DecisionBadge decision={decision} /></div><div className="hero-copy"><p className="eyebrow">Primary reason · Account takeover sequence</p><h2>{title}</h2><p>{description}</p></div><div className="hero-meta"><span>Evaluation</span><strong className="mono">evaluation_4b19</strong><span>Model version</span><strong className="mono">nche-risk-v0.3.1</strong></div></div>;
+  return <div className="investigation-hero"><div className="hero-status"><RiskScore score={score} decision={decision} level={level} /><DecisionBadge decision={decision} /></div><div className="hero-copy"><p className="eyebrow">Primary reason · Account takeover sequence</p><h2>{title}</h2><p>{description}</p></div><div className="hero-meta"><span>Evaluation</span><strong className="mono">evaluation_4b19</strong><span>Model version</span><strong className="mono">nche-risk-v0.2.0</strong></div></div>;
 }

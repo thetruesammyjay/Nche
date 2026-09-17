@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { DecisionBadge, EventTimeline, RiskScore } from "@nche/ui";
+import { EventTimeline } from "@nche/ui";
+import { EvaluationEvidencePanel } from "../../../../components/evaluation-evidence";
 import { InvestigationHero } from "../../../../components/command-ui";
 
 const events = [
@@ -11,5 +12,19 @@ const events = [
 
 export default async function InvestigationPage({ params }: { params: Promise<{ caseId: string }> }) {
   const { caseId } = await params;
-  return <div className="dashboard-page"><div className="case-breadcrumb"><Link href="/investigations">Investigations</Link><span>/</span><strong>{caseId}</strong></div><InvestigationHero score={96} decision="BLOCK" level="critical" title="Account takeover sequence detected" description="A new device login was followed by a password reset and a new beneficiary within 64 seconds. The transfer is 18.4 times the customer's historical median." /><div className="investigation-grid"><article className="panel evidence-panel"><div className="panel-heading"><div><p className="eyebrow">Observed sequence</p><h2>What changed, in order</h2></div><span className="provenance-tag">SIM Intelligence · SIMULATED</span></div><EventTimeline events={events} /></article><aside className="panel evidence-panel"><div className="panel-heading"><div><p className="eyebrow">Machine explanation</p><h2>Evidence object</h2></div><button className="icon-button">⋯</button></div><div className="evidence-rows"><div><span>Policy rule</span><strong className="mono">ATO_CRITICAL_001</strong></div><div><span>Primary reason</span><strong>account_takeover_sequence</strong></div><div><span>Historical occurrences</span><strong>0</strong></div><div><span>Amount vs median</span><strong>18.4×</strong></div><div><span>Model version</span><strong className="mono">nche-risk-v0.3.1</strong></div></div><div className="analyst-note"><span className="note-mark">“</span><div><p>The customer logged in from a device never previously associated with the account. Within 64 seconds, the password was reset and a new beneficiary was created.</p><small>Analyst explanation · generated from deterministic evidence</small></div></div></aside></div><div className="case-actions"><button className="cyan-button">Assign to me <span>→</span></button><button className="outline-control">Mark as resolved</button><Link href="/alerts" className="text-link">Back to alert queue <span>←</span></Link></div></div>;
+
+  return (
+    <div className="dashboard-page">
+      <div className="case-breadcrumb"><Link href="/investigations">Investigations</Link><span>/</span><strong>{caseId}</strong></div>
+      <InvestigationHero score={90} decision="BLOCK" level="critical" title="Account takeover sequence detected" description="A new device login was followed by a password reset and a new beneficiary within 64 seconds. The transfer is 18.4 times the customer's historical median." />
+      <div className="investigation-grid">
+        <article className="panel evidence-panel">
+          <div className="panel-heading"><div><p className="eyebrow">Observed sequence</p><h2>What changed, in order</h2></div><span className="provenance-tag">SIM Intelligence · SIMULATED</span></div>
+          <EventTimeline events={events} />
+        </article>
+        <EvaluationEvidencePanel />
+      </div>
+      <div className="case-actions"><button className="cyan-button">Assign to me <span>→</span></button><button className="outline-control">Mark as resolved</button><Link href="/alerts" className="text-link">Back to alert queue <span>←</span></Link></div>
+    </div>
+  );
 }

@@ -1,6 +1,7 @@
 export const DECISIONS = ["ALLOW", "CHALLENGE", "BLOCK", "REVIEW"] as const;
 export type Decision = (typeof DECISIONS)[number];
 export type RiskLevel = "low" | "medium" | "high" | "critical";
+export type EvaluationMode = "Observe" | "Enforce";
 
 export interface Evidence {
   event: string;
@@ -22,4 +23,9 @@ export interface RiskEvaluation {
   evidence: Evidence[];
   model_version: string;
   created_at: string;
+  mode: EvaluationMode;
+  enforced: boolean;
+  idempotent_replay: boolean;
+  latency_ms?: number | null;
+  fallback?: boolean;
 }

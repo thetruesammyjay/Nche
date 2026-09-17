@@ -34,6 +34,9 @@ uv run alembic upgrade head
 - `GET /health/ready`: readiness response, including database state
 - `POST /events/ingest`: persist an event
 - `POST /risk/evaluate`: evaluate and persist a risk decision
+- `POST /v1/evaluate_action`: evaluate a sensitive action before submission; supports `Idempotency-Key` and `X-Nche-Mode: Observe | Enforce`
 - `GET /explain/{evaluation_id}`: retrieve the persisted decision evidence
+
+The pre-transfer endpoint returns the recommendation and evidence in under the engine's 50 ms budget for the in-memory path. Use `Observe` while shadowing decisions and `Enforce` when the institution is ready to act on the recommendation. Reuse the same `Idempotency-Key` when retrying an action request.
 
 OpenAPI docs are available at `/docs` outside production. Production disables the interactive docs by default.

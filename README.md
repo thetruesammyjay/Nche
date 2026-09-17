@@ -4,6 +4,18 @@
 
 **Repository:** https://github.com/thetruesammyjay/nche
 
+## Local development
+
+Start the FastAPI service from the API workspace with the `nche` package entrypoint:
+
+```powershell
+cd apps/api
+uv sync
+uv run uvicorn nche.main:app --reload
+```
+
+The import target is `nche.main:app`; there is no `app.main` package in this repository. The API uses an in-memory repository when `DATABASE_URL` is not set. See [apps/api/README.md](apps/api/README.md) for database and deployment configuration.
+
 ---
 
 ```text
@@ -19,7 +31,7 @@ But it isn't the customer.
 03:13  New device               Risk 42
 03:14  Password reset           Risk 57
 03:14  New beneficiary          Risk 74
-03:15  ₦650,000 transfer        Risk 96
+03:15  ₦650,000 transfer        Risk 90
 
                     BLOCK
 ```
@@ -39,6 +51,49 @@ Nche does not replace authentication, core banking, NIBSS, NIP, NPS, or a paymen
 > **Valid credentials prove that someone knows the secret. They do not always prove that the person controlling the account is the legitimate owner.**
 
 Nche is decision-support infrastructure, not a decision-maker. The integrating institution retains final authority over its own risk policy.
+
+## Implemented Product Surface
+
+The current implementation is a working vertical slice from event sequence to analyst-facing decision:
+
+- **Risk engine:** deterministic risk fusion combines event timing, device novelty, credential changes, beneficiary novelty, and transaction amount relative to the customer's median.
+- **FastAPI service:** `POST /risk/evaluate` remains available for standard evaluations. `POST /v1/evaluate_action` evaluates a sensitive action immediately before submission and persists the resulting evidence.
+- **Observe and Enforce modes:** `X-Nche-Mode: Observe` returns shadow decisions without asserting enforcement; `X-Nche-Mode: Enforce` marks the evaluation as institution-enforced while the institution still owns the final authorization decision.
+- **Safe retries:** `Idempotency-Key` is stored with the evaluation. Retrying the same action returns the original evaluation with `idempotent_replay: true` instead of creating a second decision.
+- **Latency contract:** action evaluations return `latency_ms` and expose `X-Nche-Latency-Ms`. The in-memory path is designed to stay inside the 50 ms pre-transfer budget.
+- **Persistence:** PostgreSQL stores evaluation evidence and idempotency keys through the `0002_add_idempotency_key` migration; local development falls back to the in-memory repository when `DATABASE_URL` is not configured.
+- **Nche Command:** the dashboard exposes investigation timelines, machine evidence, risk distributions, model provenance, and live API metadata.
+- **Demo Financial App:** the transfer flow calls the action endpoint through a same-origin Next.js route, shows a pending state, renders the returned score/evidence/mode/latency, and fails open to local institution rules when Nche is unavailable.
+
+The web BFF endpoint is `POST /api/risk/evaluate-action`. It forwards the request to the FastAPI action endpoint with a 50 ms timeout and returns a `504` upstream response when the frontend must use its local fail-open path.
+
+Example action response:
+
+```json
+{
+  "evaluation_id": "eval_4b19",
+  "decision": "BLOCK",
+  "risk_score": 90,
+  "risk_level": "critical",
+  "recommended_action": "block",
+  "policy_rule": "ATO_CRITICAL_001",
+  "primary_reason": "account_takeover_sequence",
+  "mode": "Enforce",
+  "enforced": true,
+  "idempotent_replay": false,
+  "latency_ms": 2.41,
+  "fallback": false,
+  "evidence": [
+    { "event": "new_device_login", "seconds_after_previous": 0 },
+    { "event": "password_reset", "seconds_after_previous": 53 },
+    { "event": "beneficiary_created", "seconds_after_previous": 18 },
+    { "event": "transfer_initiated", "amount_vs_customer_median": 18.4 }
+  ],
+  "model_version": "nche-risk-v0.2.0"
+}
+```
+
+The frontend stores the latest action response for the linked investigation view so analysts can inspect the same decision that was shown during the transfer flow. If the action endpoint times out, the UI clearly labels the result as a local-rules fallback and does not present it as an Nche block.
 
 ---
 
@@ -183,7 +238,7 @@ Nche returns two paired explanations for every non-ALLOW decision.
 ```json
 {
   "decision": "BLOCK",
-  "risk_score": 94,
+  "risk_score": 90,
   "risk_level": "critical",
   "recommended_action": "block",
   "policy_rule": "ATO_CRITICAL_001",
@@ -194,7 +249,12 @@ Nche returns two paired explanations for every non-ALLOW decision.
     { "event": "beneficiary_created", "seconds_after_previous": 21 },
     { "event": "high_value_transfer", "amount_vs_customer_median": 18.4 }
   ],
-  "model_version": "nche-risk-v0.3.1"
+  "mode": "Enforce",
+  "enforced": true,
+  "idempotent_replay": false,
+  "latency_ms": 2.41,
+  "fallback": false,
+  "model_version": "nche-risk-v0.2.0"
 }
 ```
 

@@ -13,6 +13,13 @@ class Decision(StrEnum):
     REVIEW = "REVIEW"
 
 
+class EvaluationMode(StrEnum):
+    """Controls whether the recommendation is shadowed or enforced."""
+
+    OBSERVE = "Observe"
+    ENFORCE = "Enforce"
+
+
 class RiskLevel(StrEnum):
     LOW = "low"
     MEDIUM = "medium"
@@ -46,3 +53,8 @@ class RiskEvaluation(BaseModel):
     evidence: list[Evidence]
     model_version: str
     created_at: datetime
+    mode: EvaluationMode = EvaluationMode.OBSERVE
+    enforced: bool = False
+    idempotent_replay: bool = False
+    latency_ms: float | None = Field(default=None, ge=0)
+    fallback: bool = False

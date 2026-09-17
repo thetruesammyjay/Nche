@@ -18,6 +18,7 @@ class EvaluationRecord(Base):
     decision: Mapped[str] = mapped_column(String(20), index=True)
     risk_score: Mapped[int] = mapped_column(Integer)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+    idempotency_key: Mapped[str | None] = mapped_column(String(160), nullable=True, unique=True, index=True)
     payload: Mapped[dict] = mapped_column(JSONB)
 
 
