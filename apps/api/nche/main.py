@@ -7,7 +7,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from .config import get_settings
 from .db.database import Database
 from .db.repositories import InMemoryRepository, PostgresRepository
-from .routers import events, explain, health, risk
+from .institutions import InstitutionRegistry
+from .routers import events, explain, health, institutions, risk
 
 settings = get_settings()
 
@@ -18,6 +19,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     await database.connect()
     app.state.database = database
     app.state.repository = PostgresRepository(database) if database.configured else InMemoryRepository()
+    app.state.institution_registry = InstitutionRegistry()
     try:
         yield
     finally:
@@ -44,4 +46,5 @@ app.include_router(health.router)
 app.include_router(events.router)
 app.include_router(risk.router)
 app.include_router(risk.action_router)
+app.include_router(institutions.router)
 app.include_router(explain.router)

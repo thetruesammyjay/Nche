@@ -52,6 +52,7 @@ export function EvaluationDecision({ evaluation, loading = false }: EvaluationDe
       <div className="evaluation-meta" aria-label="Evaluation metadata">
         <span className="evaluation-status">{statusLabel}</span>
         <span>{evaluation.mode} mode</span>
+        {evaluation.institution_ref && <span>{evaluation.institution_ref}</span>}
         <span>{evaluation.latency_ms ?? 0}ms response</span>
         {evaluation.idempotent_replay && <span className="evaluation-replay">Idempotent replay</span>}
       </div>

@@ -23,6 +23,7 @@ export interface RiskEvaluation {
   evidence: Evidence[];
   model_version: string;
   created_at: string;
+  institution_ref?: string | null;
   mode: EvaluationMode;
   enforced: boolean;
   idempotent_replay: boolean;

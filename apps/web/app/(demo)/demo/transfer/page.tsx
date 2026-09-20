@@ -6,8 +6,9 @@ import { useState } from "react";
 import type { RiskEvaluateResponse } from "@nche/types";
 import { EvaluationDecision } from "../../../../components/evaluation-decision";
 import { apiClient, failOpenEvaluation } from "../../../../lib/api-client";
+import { parseAmount, previewTransferRisk } from "../../../../lib/risk-preview";
 
-function takeoverEvents() {
+function takeoverEvents(amount: number) {
   const start = Date.now();
   return [
     ["new_device_login", 0],
@@ -20,7 +21,7 @@ function takeoverEvents() {
     event_name: event_name as "new_device_login" | "password_reset" | "beneficiary_created" | "transfer_initiated",
     channel: "web" as const,
     occurred_at: new Date(start + Number(offset) * 1000).toISOString(),
-    amount: event_name === "transfer_initiated" ? 650000 : undefined,
+    amount: event_name === "transfer_initiated" ? amount : undefined,
     metadata: event_name === "transfer_initiated" ? { customer_median_amount: 35326 } : undefined,
   }));
 }
@@ -29,14 +30,17 @@ export default function TransferPage() {
   const [submitted, setSubmitted] = useState(false);
   const [evaluation, setEvaluation] = useState<RiskEvaluateResponse | null>(null);
   const [evaluating, setEvaluating] = useState(false);
+  const [amount, setAmount] = useState("650000");
   const fallback = evaluation?.fallback === true;
+  const amountValue = parseAmount(amount);
+  const previewRisk = previewTransferRisk(amountValue);
 
   async function submitTransfer() {
     setEvaluating(true);
     setSubmitted(true);
     try {
       const result = await apiClient.evaluateAction(
-        { customer_ref: "customer_demo", institution_ref: "apex_mfb", events: takeoverEvents() },
+        { customer_ref: "customer_demo", institution_ref: "apex_mfb", events: takeoverEvents(amountValue) },
         { mode: "Enforce", idempotencyKey: `demo-transfer-${Date.now()}`, timeoutMs: 50 },
       );
       window.sessionStorage.setItem("nche:last-evaluation", JSON.stringify(result));
@@ -80,7 +84,7 @@ export default function TransferPage() {
             <>
               <div className="transfer-heading"><p className="eyebrow">Send money</p><h1>New transfer</h1><p className="muted">Tell us who you are paying and how much.</p></div>
               <div className="recipient-card"><span className="recipient-avatar">SO</span><div><strong>Seyi Okafor</strong><small>₦ · Zenith Bank · •••• 1024</small></div><button type="button">Change</button></div>
-              <label className="field-label">Amount<input className="amount-input" defaultValue="650000" inputMode="numeric" /><span className="currency-prefix">₦</span></label>
+              <label className="field-label">Amount<input className="amount-input" value={amount} onChange={(event) => setAmount(event.target.value.replace(/[^0-9.]/g, ""))} inputMode="numeric" /><span className="currency-prefix">₦</span></label>
               <label className="field-label">Payment note <span className="optional">Optional</span><input placeholder="What is this for?" /></label>
               <button className="cyan-button full-width" onClick={submitTransfer} disabled={evaluating}>{evaluating ? "Checking transfer…" : "Continue transfer →"}</button>
               <p className="form-note"><span aria-hidden="true">⌁</span> Nche evaluates sensitive actions before your institution completes them.</p>
@@ -90,7 +94,7 @@ export default function TransferPage() {
 
         <aside className="transfer-aside">
           <p className="eyebrow">Nche is watching</p>
-          <div className="watch-score"><span>Current risk</span><strong>{evaluation?.risk_score ?? 21}</strong><small>{evaluating ? "Evaluating · pending" : fallback ? "Fallback · local rules" : submitted ? `${evaluation?.risk_level ?? "critical"} · ${evaluation?.decision.toLowerCase() ?? "blocked"}` : "Low · allowed so far"}</small></div>
+          <div className="watch-score"><span>Current risk</span><strong>{evaluation?.risk_score ?? previewRisk.score}</strong><small className={`watch-risk-status watch-risk-${evaluation?.risk_level ?? previewRisk.level}`}>{evaluating ? "Evaluating · pending" : fallback ? "Fallback · local rules" : submitted ? `${evaluation?.risk_level ?? "critical"} · ${evaluation?.decision.toLowerCase() ?? "blocked"}` : `${previewRisk.level} · ${previewRisk.decision}`}</small>{!submitted && <span className="watch-amount-note">{previewRisk.amountPoints > 0 ? `Transfer amount adds +${previewRisk.amountPoints} risk` : "Amount is within the usual range"}</span>}</div>
           <div className="watch-line"><span className="watch-dot done" /><span>Login authenticated</span><small>03:12:08</small></div>
           <div className="watch-line"><span className={`watch-dot ${evaluating ? "pending" : submitted ? (fallback ? "pending" : "critical") : "pending"}`} /><span>{evaluating ? "Sending event sequence to policy" : fallback ? "Passed to local institution rules" : submitted ? "Takeover sequence detected" : "Waiting for transfer"}</span><small>{submitted ? (evaluating ? "checking" : "now") : "next event"}</small></div>
           <div className="watch-foot">Decision support by <strong>Nche</strong></div>

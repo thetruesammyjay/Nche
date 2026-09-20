@@ -4,6 +4,7 @@ import type {
   RiskEvaluateRequest,
   RiskEvaluateResponse,
 } from "@nche/types";
+import type { Institution, InstitutionCreate } from "@nche/types";
 
 const API_URL = process.env.NCHE_API_URL ?? "http://localhost:8000";
 
@@ -26,6 +27,8 @@ async function request<T>(path: string, init?: RequestInit, timeoutMs = 5000): P
 
 export const apiClient = {
   health: () => request<HealthResponse>("/health"),
+  listInstitutions: () => request<Institution[]>("/api/institutions"),
+  createInstitution: (payload: InstitutionCreate) => request<Institution>("/api/institutions", { method: "POST", body: JSON.stringify(payload) }),
   evaluateRisk: (payload: RiskEvaluateRequest) => request<RiskEvaluateResponse>("/risk/evaluate", { method: "POST", body: JSON.stringify(payload) }),
   evaluateAction: (payload: RiskEvaluateRequest, options: EvaluateActionOptions = {}) => {
     const headers: Record<string, string> = { "X-Nche-Mode": options.mode ?? "Enforce" };

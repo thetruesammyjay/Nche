@@ -53,6 +53,7 @@ class RiskEvaluation(BaseModel):
     evidence: list[Evidence]
     model_version: str
     created_at: datetime
+    institution_ref: str | None = None
     mode: EvaluationMode = EvaluationMode.OBSERVE
     enforced: bool = False
     idempotent_replay: bool = False

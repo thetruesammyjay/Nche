@@ -17,3 +17,24 @@ def test_takeover_sequence_blocks() -> None:
     assert result.decision == Decision.BLOCK
     assert result.risk_score == 90
     assert result.primary_reason == "account_takeover_sequence"
+
+
+def test_transfer_amount_increases_risk_when_customer_median_is_known() -> None:
+    now = datetime.now(UTC)
+
+    def evaluate_amount(amount: float):
+        event = NcheEvent(
+            event_id=f"transfer-{amount}",
+            customer_ref="customer_amount_test",
+            event_name=EventName.TRANSFER_INITIATED,
+            channel=EventChannel.WEB,
+            occurred_at=now,
+            amount=amount,
+            metadata={"customer_median_amount": 35000},
+        )
+        return evaluate(RiskRequest(customer_ref="customer_amount_test", events=[event]))
+
+    ordinary = evaluate_amount(35000)
+    unusual = evaluate_amount(650000)
+
+    assert unusual.risk_score > ordinary.risk_score

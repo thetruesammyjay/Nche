@@ -2,7 +2,7 @@
 node_modules/
 .pnpm-store/
 .turbo/
-
+.codex/
 # Next.js / Vercel
 apps/web/.next/
 apps/web/out/

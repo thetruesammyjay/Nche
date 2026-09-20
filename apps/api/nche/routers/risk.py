@@ -1,7 +1,7 @@
 from time import perf_counter
 from typing import Annotated
 
-from fastapi import APIRouter, Header, Request, Response
+from fastapi import APIRouter, Header, HTTPException, Request, Response, status
 
 from nche.engine.risk_fusion import evaluate
 from nche.schemas.risk import EvaluationMode, RiskEvaluation, RiskRequest
@@ -10,9 +10,15 @@ router = APIRouter(prefix="/risk", tags=["risk"])
 action_router = APIRouter(tags=["risk"])
 
 
+def ensure_known_institution(request: Request, institution_ref: str | None) -> None:
+    if institution_ref and request.app.state.institution_registry.get(institution_ref) is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="institution not found")
+
+
 @router.post("/evaluate", response_model=RiskEvaluation)
 async def evaluate_risk(request_body: RiskRequest, request: Request) -> RiskEvaluation:
-    evaluation = evaluate(request_body)
+    ensure_known_institution(request, request_body.institution_ref)
+    evaluation = evaluate(request_body).model_copy(update={"institution_ref": request_body.institution_ref})
     await request.app.state.repository.save_evaluation(request_body.customer_ref, request_body.institution_ref, evaluation)
     return evaluation
 
@@ -26,6 +32,7 @@ async def evaluate_action(
     mode: Annotated[EvaluationMode, Header(alias="X-Nche-Mode")] = EvaluationMode.OBSERVE,
 ) -> RiskEvaluation:
     """Evaluate a sensitive action before the institution submits it."""
+    ensure_known_institution(request, request_body.institution_ref)
     started = perf_counter()
     repository = request.app.state.repository
 
@@ -36,7 +43,7 @@ async def evaluate_action(
             response.headers["X-Nche-Latency-Ms"] = f"{(perf_counter() - started) * 1000:.3f}"
             return replay
 
-    evaluation = evaluate(request_body)
+    evaluation = evaluate(request_body).model_copy(update={"institution_ref": request_body.institution_ref})
     evaluation = evaluation.model_copy(
         update={
             "mode": mode,
