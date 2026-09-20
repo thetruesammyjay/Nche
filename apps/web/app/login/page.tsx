@@ -2,13 +2,12 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { DEMO_ANALYST, isSafeRedirect } from "../../lib/auth";
 
 export default function LoginPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [email, setEmail] = useState(DEMO_ANALYST.email);
   const [password, setPassword] = useState(DEMO_ANALYST.password);
   const [pending, setPending] = useState(false);
@@ -28,7 +27,7 @@ export default function LoginPage() {
         const body = (await response.json().catch(() => null)) as { detail?: string } | null;
         throw new Error(body?.detail ?? "Sign-in failed.");
       }
-      const next = searchParams.get("next");
+      const next = new URLSearchParams(window.location.search).get("next");
       window.dispatchEvent(new Event("nche:route-start"));
       router.replace(isSafeRedirect(next) ? next : "/overview");
     } catch (reason) {
