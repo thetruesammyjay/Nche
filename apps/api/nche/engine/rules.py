@@ -26,14 +26,27 @@ def rule_score(events: Sequence[NcheEvent]) -> tuple[int, list[str]]:
 
 
 def _transfer_amount_score(events: Sequence[NcheEvent]) -> int:
-    """Add a bounded amount anomaly score when the customer median is known."""
+    """Add bounded amount and available-balance usage signals for a transfer."""
 
     for event in events:
         if event.event_name != EventName.TRANSFER_INITIATED or event.amount is None:
             continue
+        score = 0
         median = event.metadata.get("customer_median_amount")
-        if isinstance(median, bool) or not isinstance(median, (int, float)) or median <= 0:
-            continue
-        ratio = event.amount / float(median)
-        return min(35, max(0, int((ratio - 1) * 2 + 0.5)))
+        if not isinstance(median, bool) and isinstance(median, (int, float)) and median > 0:
+            ratio = event.amount / float(median)
+            score += min(35, max(0, int((ratio - 1) * 2 + 0.5)))
+
+        balance = event.metadata.get("account_balance")
+        if not isinstance(balance, bool) and isinstance(balance, (int, float)) and balance > 0:
+            ratio = event.amount / float(balance)
+            if ratio >= 1:
+                score += 25
+            elif ratio >= 0.9:
+                score += 18
+            elif ratio >= 0.75:
+                score += 10
+            elif ratio >= 0.5:
+                score += 4
+        return min(60, score)
     return 0

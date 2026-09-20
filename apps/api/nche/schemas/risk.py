@@ -32,6 +32,7 @@ class Evidence(BaseModel):
     weight: float | None = None
     seconds_after_previous: int | None = None
     amount_vs_customer_median: float | None = None
+    balance_usage_ratio: float | None = None
     observed: str | None = None
     interpretation: str | None = None
 

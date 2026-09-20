@@ -1,14 +1,24 @@
 "use client";
 
-import type { RiskEvaluateResponse } from "@nche/types";
+import type { Evidence, RiskEvaluateResponse } from "@nche/types";
 
 type EvaluationDecisionProps = {
   evaluation: RiskEvaluateResponse | null;
   loading?: boolean;
 };
 
-function formatEvidenceValue(value: number | undefined) {
-  return value === undefined ? null : `${value.toFixed(value >= 10 ? 1 : 2)}× median`;
+function formatEvidenceValue(item: Evidence) {
+  if (item.amount_vs_customer_median !== undefined) {
+    const value = item.amount_vs_customer_median;
+    const medianLabel = `${value.toFixed(value >= 10 ? 1 : 2)}\u00d7 median`;
+    return item.balance_usage_ratio === undefined
+      ? medianLabel
+      : `${medianLabel} · ${Math.round(item.balance_usage_ratio * 100)}% balance`;
+  }
+  if (item.balance_usage_ratio !== undefined) {
+    return `${Math.round(item.balance_usage_ratio * 100)}% balance`;
+  }
+  return null;
 }
 
 export function EvaluationDecision({ evaluation, loading = false }: EvaluationDecisionProps) {
@@ -19,7 +29,7 @@ export function EvaluationDecision({ evaluation, loading = false }: EvaluationDe
         <div>
           <p className="eyebrow">Nche decision rail</p>
           <strong>Checking the action against live risk policy</strong>
-          <p>Waiting for the 50ms evaluation window to complete.</p>
+          <p>Waiting for the 500ms evaluation window to complete.</p>
         </div>
       </section>
     );
@@ -71,7 +81,7 @@ export function EvaluationDecision({ evaluation, loading = false }: EvaluationDe
                 <small>{item.interpretation ?? item.observed ?? "Observed by the risk engine"}</small>
               </div>
               <span className="evaluation-evidence-value">
-                {formatEvidenceValue(item.amount_vs_customer_median) ??
+                {formatEvidenceValue(item) ??
                   (item.seconds_after_previous === undefined ? "Signal" : `+${item.seconds_after_previous}s`)}
               </span>
             </div>

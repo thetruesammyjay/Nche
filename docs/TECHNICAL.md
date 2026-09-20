@@ -118,7 +118,7 @@ The response includes the decision, score, level, recommended action, policy rul
     { "event": "new_device_login", "seconds_after_previous": 0 },
     { "event": "password_reset", "seconds_after_previous": 53 },
     { "event": "beneficiary_created", "seconds_after_previous": 18 },
-    { "event": "transfer_initiated", "amount_vs_customer_median": 18.4 }
+    { "event": "transfer_initiated", "amount_vs_customer_median": 18.4, "balance_usage_ratio": 0.78 }
   ],
   "model_version": "nche-risk-v0.3.0"
 }
@@ -137,6 +137,7 @@ The current action path uses deterministic rules in `apps/api/nche/engine/rules.
 | New beneficiary | 17 |
 | Transfer initiated | 22 |
 | Transfer amount anomaly | `min(35, max(0, round((amount / customer_median - 1) * 2)))` |
+| Transfer balance use | 0 below 50%; 4 at 50-75%; 10 at 75-90%; 18 at 90-100%; 25 above balance |
 | Three or more takeover signals | 15 bonus |
 
 The score is capped at 100 and classified as follows:
@@ -148,7 +149,7 @@ The score is capped at 100 and classified as follows:
 | 60–79 | High | Review |
 | 80–100 | Critical | Block |
 
-The amount anomaly contribution is only applied when the transfer event includes a positive `customer_median_amount` metadata value. The same calculation powers the transfer demo's live Current risk preview, so increasing the amount raises the score before submission. The risk fusion layer also adds timing, observed channel, device or beneficiary references, amount-to-median ratio, and a human-readable interpretation to each evidence item. An LLM is not required for the decision.
+The amount anomaly contribution is only applied when the transfer event includes a positive `customer_median_amount` metadata value. When `account_balance` is present, the balance-use contribution increases as the transfer consumes more of the available funds. The same calculations power the transfer demo's live Current risk preview, so increasing the amount raises the score before submission. The risk fusion layer also adds timing, observed channel, device or beneficiary references, amount-to-median ratio, balance usage ratio, and a human-readable interpretation to each evidence item. An LLM is not required for the decision.
 
 ## Multi-institution support
 
@@ -169,7 +170,7 @@ The browser calls same-origin Next.js routes for protected workspace data:
 - `GET /api/institutions` forwards to `/v1/institutions`.
 - `POST /api/institutions` forwards to `/v1/institutions`.
 
-The transfer demo uses a 50 ms upstream window and fails open to local institution rules when Nche is unavailable. Its amount field updates a pre-submit risk preview using the same customer-median anomaly calculation as the API. The from-scratch analyst analysis uses the same action contract and renders the returned institution, decision mode, latency, replay state, score, and evidence. The root layout also includes a lightweight client route-loading overlay for internal page navigation.
+The transfer demo uses a 500 ms upstream window and fails open to local institution rules when Nche is unavailable. If the API times out, the demo preserves its calculated risk preview while clearly marking the result as local rules. Its amount field updates a pre-submit risk preview using the same customer-median and balance-use calculations as the API. The from-scratch analyst analysis uses the same action contract and renders the returned institution, decision mode, latency, replay state, score, and evidence. The root layout also includes a lightweight client route-loading overlay for internal page navigation.
 
 ## Persistence and migrations
 

@@ -8,6 +8,7 @@ export interface Evidence {
   weight?: number;
   seconds_after_previous?: number;
   amount_vs_customer_median?: number;
+  balance_usage_ratio?: number;
   observed?: string;
   interpretation?: string;
 }

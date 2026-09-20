@@ -22,7 +22,7 @@ function takeoverEvents(amount: number) {
     channel: "web" as const,
     occurred_at: new Date(start + Number(offset) * 1000).toISOString(),
     amount: event_name === "transfer_initiated" ? amount : undefined,
-    metadata: event_name === "transfer_initiated" ? { customer_median_amount: 35326 } : undefined,
+    metadata: event_name === "transfer_initiated" ? { customer_median_amount: 35326, account_balance: 1_284_500 } : undefined,
   }));
 }
 
@@ -41,12 +41,12 @@ export default function TransferPage() {
     try {
       const result = await apiClient.evaluateAction(
         { customer_ref: "customer_demo", institution_ref: "apex_mfb", events: takeoverEvents(amountValue) },
-        { mode: "Enforce", idempotencyKey: `demo-transfer-${Date.now()}`, timeoutMs: 50 },
+        { mode: "Enforce", idempotencyKey: `demo-transfer-${Date.now()}`, timeoutMs: 500 },
       );
       window.sessionStorage.setItem("nche:last-evaluation", JSON.stringify(result));
       setEvaluation(result);
     } catch {
-      const localResult = failOpenEvaluation();
+      const localResult = failOpenEvaluation({ risk_score: previewRisk.score, risk_level: previewRisk.level });
       window.sessionStorage.setItem("nche:last-evaluation", JSON.stringify(localResult));
       setEvaluation(localResult);
     } finally {
@@ -63,7 +63,7 @@ export default function TransferPage() {
         </Link>
         <div className="demo-header-actions">
           <span className="secure-label"><i /> Demo environment</span>
-          <Link className="outline-control" href="/overview">Open Command <span aria-hidden="true">↗</span></Link>
+          <Link className="outline-control" href="/login?next=%2Foverview">Open Command <span aria-hidden="true">↗</span></Link>
         </div>
       </header>
 
@@ -75,7 +75,7 @@ export default function TransferPage() {
               <div className={`result-icon ${fallback ? "is-fallback" : ""}`} aria-hidden="true">{fallback ? "↗" : "!"}</div>
               <p className="eyebrow">{fallback ? "Institution rules active" : "Verification required"}</p>
               <h1>{fallback ? "Your institution can continue this transfer." : "We need to check this transfer."}</h1>
-              <p>{fallback ? "Nche did not respond within 50ms, so the transfer was passed to your institution's local rules. No Nche block was applied." : "Nche noticed a new device, a password reset, a first-time recipient, and an unusual amount in one short sequence. Your institution has not submitted the payment."}</p>
+              <p>{fallback ? "Nche did not respond within 500ms, so the transfer was passed to your institution's local rules. The risk preview remains visible, but no Nche block was applied." : "Nche noticed a new device, a password reset, a first-time recipient, and an unusual amount in one short sequence. Your institution has not submitted the payment."}</p>
               {evaluating ? <EvaluationDecision evaluation={null} loading /> : <EvaluationDecision evaluation={evaluation} />}
               {!evaluating && !fallback && <div className="result-actions"><Link className="cyan-button" href="/investigations/case_4b19">View Nche decision <span aria-hidden="true">↗</span></Link><Link className="text-link" href="/demo">Return to account <span aria-hidden="true">→</span></Link></div>}
               {fallback && <div className="result-actions"><Link className="text-link" href="/demo">Return to account <span aria-hidden="true">→</span></Link></div>}
@@ -94,7 +94,7 @@ export default function TransferPage() {
 
         <aside className="transfer-aside">
           <p className="eyebrow">Nche is watching</p>
-          <div className="watch-score"><span>Current risk</span><strong>{evaluation?.risk_score ?? previewRisk.score}</strong><small className={`watch-risk-status watch-risk-${evaluation?.risk_level ?? previewRisk.level}`}>{evaluating ? "Evaluating · pending" : fallback ? "Fallback · local rules" : submitted ? `${evaluation?.risk_level ?? "critical"} · ${evaluation?.decision.toLowerCase() ?? "blocked"}` : `${previewRisk.level} · ${previewRisk.decision}`}</small>{!submitted && <span className="watch-amount-note">{previewRisk.amountPoints > 0 ? `Transfer amount adds +${previewRisk.amountPoints} risk` : "Amount is within the usual range"}</span>}</div>
+          <div className="watch-score"><span>Current risk</span><strong>{evaluation?.risk_score ?? previewRisk.score}</strong><small className={`watch-risk-status watch-risk-${evaluation?.risk_level ?? previewRisk.level}`}>{evaluating ? "Evaluating · pending" : fallback ? "Fallback · local rules" : submitted ? `${evaluation?.risk_level ?? "critical"} · ${evaluation?.decision.toLowerCase() ?? "blocked"}` : `${previewRisk.level} · ${previewRisk.decision}`}</small>{!submitted && <span className="watch-amount-note">{previewRisk.amountPoints > 0 || previewRisk.balancePoints > 0 ? `Transfer adds +${previewRisk.amountPoints + previewRisk.balancePoints} risk (${previewRisk.balancePoints} from balance use)` : "Amount is within the usual range"}</span>}</div>
           <div className="watch-line"><span className="watch-dot done" /><span>Login authenticated</span><small>03:12:08</small></div>
           <div className="watch-line"><span className={`watch-dot ${evaluating ? "pending" : submitted ? (fallback ? "pending" : "critical") : "pending"}`} /><span>{evaluating ? "Sending event sequence to policy" : fallback ? "Passed to local institution rules" : submitted ? "Takeover sequence detected" : "Waiting for transfer"}</span><small>{submitted ? (evaluating ? "checking" : "now") : "next event"}</small></div>
           <div className="watch-foot">Decision support by <strong>Nche</strong></div>

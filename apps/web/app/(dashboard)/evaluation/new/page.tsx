@@ -20,6 +20,7 @@ export default function NewEvaluationPage() {
   const [customerRef, setCustomerRef] = useState("customer_demo");
   const [amount, setAmount] = useState("650000");
   const [median, setMedian] = useState("35326");
+  const [balance, setBalance] = useState("1284500");
   const [channel, setChannel] = useState<EventChannel>("web");
   const [mode, setMode] = useState<"Observe" | "Enforce">("Enforce");
   const [enabled, setEnabled] = useState<Record<string, boolean>>(() => Object.fromEntries(steps.map((step) => [step.event_name, true])));
@@ -50,7 +51,7 @@ export default function NewEvaluationPage() {
         device_ref: step.event_name === "new_device_login" ? "device_analysis" : undefined,
         beneficiary_ref: step.event_name === "beneficiary_created" ? "beneficiary_analysis" : undefined,
         amount: step.event_name === "transfer_initiated" ? numericAmount : undefined,
-        metadata: step.event_name === "transfer_initiated" ? { customer_median_amount: Number(median) || 0 } : undefined,
+        metadata: step.event_name === "transfer_initiated" ? { customer_median_amount: Number(median) || 0, account_balance: Number(balance) || 0 } : undefined,
       })),
     };
   }
@@ -87,6 +88,7 @@ export default function NewEvaluationPage() {
             <label className="field-label">Institution<select value={institutionRef} onChange={(event) => setInstitutionRef(event.target.value)} disabled={loading || institutions.length === 0}><option value="">Select an institution</option>{institutions.map((institution) => <option value={institution.institution_ref} key={institution.institution_ref}>{institution.name}</option>)}</select></label>
             <label className="field-label">Customer reference<input value={customerRef} onChange={(event) => setCustomerRef(event.target.value)} placeholder="customer_demo" /></label>
             <div className="analysis-field-grid"><label className="field-label">Transfer amount<input value={amount} onChange={(event) => setAmount(event.target.value)} inputMode="numeric" /></label><label className="field-label">Customer median<input value={median} onChange={(event) => setMedian(event.target.value)} inputMode="numeric" /></label></div>
+            <div className="analysis-field-grid"><label className="field-label">Available balance<input value={balance} onChange={(event) => setBalance(event.target.value)} inputMode="numeric" /></label><span className="field-help">Nche raises risk when a transfer consumes most of the available balance.</span></div>
             <div className="analysis-field-grid"><label className="field-label">Channel<select value={channel} onChange={(event) => setChannel(event.target.value as EventChannel)}><option value="web">Web</option><option value="mobile">Mobile</option><option value="ussd">USSD</option><option value="api">API</option></select></label><label className="field-label">Decision mode<select value={mode} onChange={(event) => setMode(event.target.value as "Observe" | "Enforce")}><option value="Enforce">Enforce</option><option value="Observe">Observe</option></select></label></div>
           </div>
           <div className="sequence-builder"><div className="sequence-builder-heading"><div><p className="eyebrow">Signals in this request</p><h2>Choose the sequence</h2></div><span>{selectedSteps.length} selected</span></div>{steps.map((step) => <label className={`sequence-toggle ${enabled[step.event_name] ? "selected" : ""}`} key={step.event_name}><input type="checkbox" checked={enabled[step.event_name]} onChange={(event) => setEnabled({ ...enabled, [step.event_name]: event.target.checked })} /><span className="sequence-check" /><span><strong>{step.label}</strong><small>{step.detail} · +{step.offset}s</small></span></label>)}</div>

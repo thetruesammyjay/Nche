@@ -64,7 +64,7 @@ The current demo includes Apex MFB, Kuda, OPay, and PalmPay. An analyst can add 
 
 ### 2.1 Evaluation workflow
 
-1. The institution creates normalized events with a customer reference, event name, channel, and time. Device, beneficiary, amount, and customer-median values are optional.
+1. The institution creates normalized events with a customer reference, event name, channel, and time. Device, beneficiary, amount, customer-median, and available-balance values are optional.
 2. The institution sends the event sequence and institution reference to Nche.
 3. The API validates the request and applies deterministic risk rules.
 4. The engine combines event signals, timing, and amount deviation. It caps the score at 100 and classifies the result.
@@ -79,7 +79,7 @@ The sequence diagram shows the exchange. Nche recommends an action. It does not 
 
 The current rules assign 21 points to a new device login, 15 points to a password or PIN reset, 17 points to a new beneficiary, and 22 points to a transfer initiation. A sequence with three or more takeover signals receives a 15 point bonus.
 
-When the transfer event includes a positive customer median amount, Nche adds a bounded amount anomaly score. The score increases as the transfer becomes larger than the customer's normal median. The transfer demo uses the same calculation for its live **Current risk** value. The API response includes the amount-to-median ratio in the evidence.
+When the transfer event includes a positive customer median amount and available balance, Nche adds bounded amount and balance-use signals. The score increases as the transfer becomes larger than the customer's normal median and as it consumes more of the available balance. The transfer demo uses the same calculation for its live **Current risk** value. The API response includes the amount-to-median ratio and balance usage ratio in the evidence.
 
 | Score | Level | Default recommendation |
 | ---: | --- | --- |
@@ -102,9 +102,9 @@ The web application includes a public Demo Financial App, the protected Nche Com
 
 ### 3.1 Example user case
 
-Assume that Seyi Okafor normally transfers about ₦35,326 at a time. A session starts from a new device. The password is reset. A new beneficiary is created. The session then attempts to transfer ₦650,000 to that beneficiary.
+Assume that Seyi Okafor has an available balance of about ₦1.2 million and normally transfers about ₦35,326 at a time. A session starts from a new device. The password is reset. A new beneficiary is created. The session then attempts to transfer ₦1 million to that beneficiary. That transfer consumes roughly 78% of the available balance, so the amount anomaly and balance-use signals raise the current risk together.
 
-The customer has authenticated, but the sequence has changed. Nche receives the events in order. The device change, credential change, new beneficiary, and amount anomaly raise the score. The result reaches the critical range in the current demo. The institution can block the action, request another verification step, or send the case to an analyst.
+The customer has authenticated, but the sequence has changed. Nche receives the events in order. The device change, credential change, new beneficiary, amount anomaly, and balance use raise the score. The result reaches the critical range in the current demo. The institution can block the action, request another verification step, or send the case to an analyst.
 
 The analyst can open the investigation and see the event order, the time between events, the transfer ratio, and the policy result. The analyst does not need to infer the reason from a number alone.
 

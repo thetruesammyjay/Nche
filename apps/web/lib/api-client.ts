@@ -37,16 +37,16 @@ export const apiClient = {
       method: "POST",
       headers,
       body: JSON.stringify(payload),
-    }, options.timeoutMs ?? 50);
+    }, options.timeoutMs ?? 500);
   },
 };
 
-export function failOpenEvaluation(): RiskEvaluateResponse {
+export function failOpenEvaluation(preview?: Pick<RiskEvaluateResponse, "risk_score" | "risk_level">): RiskEvaluateResponse {
   return {
     evaluation_id: `fallback_${Date.now()}`,
     decision: "ALLOW",
-    risk_score: 0,
-    risk_level: "low",
+    risk_score: preview?.risk_score ?? 0,
+    risk_level: preview?.risk_level ?? "low",
     recommended_action: "allow",
     policy_rule: "FAIL_OPEN_LOCAL_RULES",
     primary_reason: "nche_unavailable",

@@ -37,6 +37,12 @@ def evaluate(request: RiskRequest) -> RiskEvaluation:
             if matching.amount is not None and isinstance(median, (int, float)) and median > 0
             else None
         )
+        balance = matching.metadata.get("account_balance")
+        balance_usage_ratio = (
+            round(matching.amount / float(balance), 2)
+            if matching.amount is not None and isinstance(balance, (int, float)) and balance > 0
+            else None
+        )
         observed = matching.channel.value
         if matching.device_ref:
             observed = f"{observed} · {matching.device_ref}"
@@ -50,6 +56,7 @@ def evaluate(request: RiskRequest) -> RiskEvaluation:
                 weight=event_weights.get(reason),
                 seconds_after_previous=seconds_after_previous,
                 amount_vs_customer_median=amount_vs_median,
+                balance_usage_ratio=balance_usage_ratio,
                 observed=observed,
                 interpretation=_interpretation(reason),
             )
