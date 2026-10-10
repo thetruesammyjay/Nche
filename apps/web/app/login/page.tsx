@@ -6,10 +6,14 @@ import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { DEMO_ANALYST, isSafeRedirect } from "../../lib/auth";
 
+const initialCredentials = process.env.NODE_ENV === "development"
+  ? { email: DEMO_ANALYST.email, password: DEMO_ANALYST.password }
+  : { email: "", password: "" };
+
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState(DEMO_ANALYST.email);
-  const [password, setPassword] = useState(DEMO_ANALYST.password);
+  const [email, setEmail] = useState(initialCredentials.email);
+  const [password, setPassword] = useState(initialCredentials.password);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
 
@@ -52,7 +56,7 @@ export default function LoginPage() {
           {error && <p className="auth-error" role="alert">{error}</p>}
           <button className="cyan-button full-width" type="submit" disabled={pending}>{pending ? "Opening workspace…" : "Open Command →"}</button>
         </form>
-        <div className="auth-demo-note"><span className="live-evidence-pulse" aria-hidden="true" /><p>Demo access is prefilled. Set <code>NCHE_ANALYST_EMAIL</code> and <code>NCHE_ANALYST_PASSWORD</code> for a deployment-specific analyst.</p></div>
+        <div className="auth-demo-note"><span className="live-evidence-pulse" aria-hidden="true" /><p>Development uses the demo credentials. Production uses <code>NCHE_ANALYST_EMAIL</code> and <code>NCHE_ANALYST_PASSWORD</code> configured on the server.</p></div>
       </section>
     </main>
   );

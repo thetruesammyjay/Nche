@@ -56,7 +56,7 @@ The use-case diagram shows these roles and the Nche service boundary. It also sh
 
 <img class="uml" src="assets/uml/nche-use-case.png" alt="UML use-case diagram for Nche" />
 
-The current demo includes Apex MFB, Kuda, OPay, and PalmPay. An analyst can add another institution while the API runs. This supports a multi-institution demonstration without a connection to a banking core.
+The current demo includes Apex MFB, Kuda, OPay, and PalmPay. An analyst can add another institution while the API runs. With PostgreSQL configured, the institution workspace persists across API restarts; without a database, it remains process-local for development. This supports a multi-institution demonstration without a connection to a banking core.
 
 <div class="page-break"></div>
 
@@ -96,6 +96,8 @@ The action endpoint supports `Observe` and `Enforce` modes. Observe mode records
 
 The web application includes a public Demo Financial App, the protected Nche Command workspace, institution management, and a from-scratch transfer analysis page. A route-loading popup gives feedback during internal navigation. The demo uses a short upstream response window and falls back to local institution rules when Nche is unavailable.
 
+The analyst workspace keeps a case state with each persisted evaluation. An analyst can assign an open case to themselves, review the ordered evidence, and mark the case resolved. These changes are recorded in the audit trail and appear in the live alert queue.
+
 <div class="page-break"></div>
 
 ## 3. User case, operating model, and references
@@ -106,19 +108,19 @@ Assume that Seyi Okafor has an available balance of about ₦1.2 million and nor
 
 The customer has authenticated, but the sequence has changed. Nche receives the events in order. The device change, credential change, new beneficiary, amount anomaly, and balance use raise the score. The result reaches the critical range in the current demo. The institution can block the action, request another verification step, or send the case to an analyst.
 
-The analyst can open the investigation and see the event order, the time between events, the transfer ratio, and the policy result. The analyst does not need to infer the reason from a number alone.
+The analyst can open the investigation and see the event order, the time between events, the transfer ratio, the policy result, and the decision activity history. The analyst does not need to infer the reason from a number alone or rely on an untraceable status change.
 
 ### 3.2 Institution control and data position
 
 Nche supports institution-owned authority. Each evaluation includes an institution reference. Observe mode lets an institution compare recommendations with current rules. Enforce mode marks a recommendation as active for the action path.
 
-The demo registry is process-local, so added institutions reset when the API restarts. Production use requires persistent institution records, an identity provider, signed sessions, multi-factor authentication, role-based access control, and audit records. The demo uses simulated events and never submits a real payment. A production integration should use pseudonymous references, data minimization, retention rules, access control, and audit logging.
+When `DATABASE_URL` is configured, institution records persist in PostgreSQL. Analyst identities also persist in the `analyst_users` table, use hashed passwords, and carry roles into signed HTTP-only web sessions. The service boundary uses an API key, sensitive operations write an append-only audit record, and the login BFF applies a per-instance rate limit. The demo uses simulated events and never submits a real payment. A production integration should use pseudonymous references, data minimization, retention rules, MFA or SSO, shared edge rate limiting, and durable audit retention.
 
 ### 3.3 Limits and next steps
 
-The repository is a working product demonstration. It does not yet provide production identity management, persistent institution storage, policy authoring, real SIM intelligence, or full operational monitoring. Each institution must choose its fail-open or fail-closed policy for each action type.
+The repository is a working product demonstration with persistent institution workspaces, analyst access, institution policy bands, a reproducible synthetic evaluation run, an append-only audit trail, and production deployment checks. It does not yet provide real SIM intelligence, durable audit retention, MFA or SSO, or full operational monitoring. Each institution must choose its fail-open or fail-closed policy for each action type.
 
-Next steps include persistent policies, signed service requests, rate limits, audit logs, alerting, and evaluation against held-out fraud scenarios. Later versions can add recipient reputation, mule-account detection, authorized push payment signals, and shared intelligence. Each new signal needs a data owner, a privacy rule, and an explanation.
+Next steps include durable audit retention, operational alerting, institution-approved evaluation data, and an AI or graph-based intelligence layer for recipient reputation and mule-account detection. Later versions can add authorized push payment signals and shared intelligence. Each new signal needs a data owner, a privacy rule, and an explanation.
 
 ### 3.4 References
 

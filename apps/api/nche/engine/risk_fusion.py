@@ -1,6 +1,7 @@
 from datetime import UTC, datetime
 from uuid import uuid4
 
+from nche.schemas.institutions import InstitutionPolicy
 from nche.schemas.risk import Decision, Evidence, RiskEvaluation, RiskRequest
 from nche.version import MODEL_VERSION
 
@@ -8,9 +9,14 @@ from .rules import rule_score
 from .thresholds import classify
 
 
-def evaluate(request: RiskRequest) -> RiskEvaluation:
+def evaluate(request: RiskRequest, *, policy: InstitutionPolicy | None = None) -> RiskEvaluation:
     score, reasons = rule_score(request.events)
-    level, decision = classify(score)
+    level, decision = classify(
+        score,
+        challenge_from=getattr(policy, "challenge_from", 30),
+        review_from=getattr(policy, "review_from", 60),
+        block_from=getattr(policy, "block_from", 80),
+    )
     ordered_events = sorted(request.events, key=lambda event: event.occurred_at)
     event_weights = {
         "new_device_login": 0.21,

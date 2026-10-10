@@ -21,6 +21,6 @@ async def readiness(request: Request) -> dict[str, str]:
     settings = get_settings()
     database = getattr(request.app.state, "database", None)
     database_ok = bool(database and (not database.configured or await database.ping()))
-    if settings.database_required and not database_ok:
+    if (settings.database_required or settings.is_production) and not database_ok:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="database unavailable")
     return {"status": "ready", "database": "connected" if database_ok and database.configured else "not_configured"}

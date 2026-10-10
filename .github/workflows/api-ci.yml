@@ -16,6 +16,10 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      NCHE_ENV: development
+      DATABASE_URL: ""
+      DATABASE_REQUIRED: "false"
     defaults:
       run:
         working-directory: apps/api

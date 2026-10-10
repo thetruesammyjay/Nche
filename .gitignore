@@ -9,6 +9,7 @@ apps/web/out/
 apps/web/.vercel/
 
 # Python / uv
+.uv-cache/
 __pycache__/
 *.py[cod]
 .venv/

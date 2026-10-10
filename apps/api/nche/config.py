@@ -19,6 +19,9 @@ class Settings(BaseSettings):
     nche_env: str = "development"
     cors_origins: str = "http://localhost:3000"
     sim_risk_source: str = "SIMULATED"
+    nche_api_key: str | None = None
+    nche_analyst_email: str = ""
+    nche_analyst_password: str = ""
     database_url: str | None = None
     database_required: bool = False
     db_pool_size: int = 5
@@ -32,6 +35,10 @@ class Settings(BaseSettings):
     @property
     def is_production(self) -> bool:
         return self.nche_env.lower() == "production"
+
+    @property
+    def api_auth_required(self) -> bool:
+        return self.is_production or bool(self.nche_api_key)
 
 
 @lru_cache

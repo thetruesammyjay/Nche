@@ -54,7 +54,7 @@ export function EvaluationDecision({ evaluation, loading = false }: EvaluationDe
           </p>
         </div>
         <div className="evaluation-score" aria-label={`Risk score ${evaluation.risk_score} out of 100`}>
-          <strong>{evaluation.risk_score}</strong>
+          <strong className="evaluation-score-value" key={evaluation.risk_score}>{evaluation.risk_score}</strong>
           <span>{evaluation.risk_level}</span>
         </div>
       </div>

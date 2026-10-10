@@ -13,3 +13,12 @@ export interface InstitutionCreate {
   name: string;
   institution_type: InstitutionType;
 }
+
+export interface InstitutionPolicy {
+  institution_ref: string;
+  challenge_from: number;
+  review_from: number;
+  block_from: number;
+  updated_at: string;
+  updated_by?: string | null;
+}

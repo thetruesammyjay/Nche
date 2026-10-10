@@ -42,7 +42,10 @@ The repository includes three connected experiences:
 
 - **Demo Financial App:** a customer starts a transfer and sees what happens when Nche evaluates it.
 - **Nche Command:** an analyst signs in, views investigations, and reviews the evidence behind a decision.
+- **Live analyst queue:** alerts and investigations read persisted evaluations, so a new analysis can be followed from the queue into its evidence.
+- **Case workflow:** analysts can assign an open case to themselves, review the evidence, and mark the case resolved; the state is retained with the evaluation.
 - **New transfer analysis:** an analyst chooses an institution, builds a customer event sequence from scratch, and runs one complete analysis.
+- **Evaluation workspace:** an analyst runs a fixed-seed synthetic holdout and compares the baseline and hybrid metrics before presenting results.
 
 The demo can work with several institutions, including Apex MFB, Kuda, OPay, and PalmPay. You can add another institution in the workspace and use it for a new analysis.
 
@@ -56,13 +59,17 @@ Nche helps institutions see what happens after authentication, while there is st
 
 This repository contains a working product demo and the supporting risk service. It uses simulated events and simulated SIM intelligence, and it never submits a real payment.
 
-The institution directory is currently kept in memory for the demo, so newly added institutions reset when the API restarts. Production deployments will need a permanent institution store, a production identity provider, and institution-specific policy configuration.
+When `DATABASE_URL` is configured, institution workspaces, analyst identities, and institution policy bands persist in PostgreSQL. The API seeds the first administrator from the configured analyst credentials, and administrators can add more analysts or adjust institution decision bands from Command settings. Without a database, the API uses in-memory directories for local development. Production deployments still need SSO or MFA and operational controls.
 
 ## Run the demo
 
 Developers can find setup commands, routes, environment variables, and test commands in [docs/TECHNICAL.md](docs/TECHNICAL.md).
 
 The guided presentation sequence is in [docs/DEMO-RUNBOOK.md](docs/DEMO-RUNBOOK.md). The system design is in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
+The hackathon problem framing, demo outcomes, production controls, and pitch sequence are in [docs/HACKATHON-PITCH.md](docs/HACKATHON-PITCH.md).
+
+The partner integration contract, request examples, retry behavior, and failure handling are in [docs/INTEGRATION.md](docs/INTEGRATION.md).
 
 ## Project direction
 

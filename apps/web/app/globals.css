@@ -312,3 +312,66 @@ button:disabled { cursor: wait; opacity: .68; }
   .analysis-field-grid { grid-template-columns: 1fr; gap: 15px; }
   .analysis-result-panel { min-height: 350px; }
 }
+
+/* Fluid interaction layer: short, interruptible transitions for navigation and decision feedback. */
+.dashboard-page, .demo-layout, .transfer-layout, .auth-card {
+  animation: surface-enter 220ms var(--ease-out) both;
+}
+.metric-card, .panel, .quick-actions > *, .analysis-context-bar {
+  animation: surface-enter 220ms var(--ease-out) both;
+}
+.metric-card:nth-child(2) { animation-delay: 35ms; }
+.metric-card:nth-child(3) { animation-delay: 70ms; }
+.metric-card:nth-child(4) { animation-delay: 105ms; }
+.evaluation-decision { animation: decision-enter 220ms var(--ease-out) both; }
+.evaluation-evidence-row { animation: evidence-enter 180ms var(--ease-out) both; }
+.evaluation-evidence-row:nth-child(2) { animation-delay: 30ms; }
+.evaluation-evidence-row:nth-child(3) { animation-delay: 60ms; }
+.evaluation-evidence-row:nth-child(4) { animation-delay: 90ms; }
+.evaluation-evidence-row:nth-child(5) { animation-delay: 120ms; }
+.watch-score-value, .evaluation-score-value { animation: risk-value-change 180ms var(--ease-out) both; }
+.route-loading-overlay { animation: overlay-enter 180ms var(--ease-out) both; backdrop-filter: blur(16px) saturate(140%); -webkit-backdrop-filter: blur(16px) saturate(140%); }
+.analyst-access-panel { margin-top: 16px; }
+.analyst-list { display: grid; gap: 0; margin-top: 16px; border-top: 1px solid var(--stone-border); }
+.analyst-row { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; gap: 10px; align-items: center; min-height: 58px; border-bottom: 1px solid #f0eeee; }
+.analyst-row strong, .analyst-row small { display: block; }
+.analyst-row strong { color: var(--ink); font-size: 11px; font-weight: 500; }
+.analyst-row small { margin-top: 2px; color: var(--ash); font-size: 9px; }
+.analyst-row .institution-status { text-transform: capitalize; }
+.analyst-invite-form { display: grid; gap: 12px; margin-top: 22px; padding-top: 19px; border-top: 1px solid var(--stone-border); }
+.analyst-invite-form .eyebrow { margin-bottom: 0; }
+.analyst-invite-form .field-label { margin-top: 0; }
+.analyst-invite-form .outline-control { justify-self: start; }
+.field-label input, .field-label select { transition: border-color 160ms var(--ease-out), box-shadow 160ms var(--ease-out); }
+@media (hover: hover) and (pointer: fine) {
+  .side-nav a, .workspace-switcher, .institution-row, .analyst-row, .analysis-investigation-link { transition: transform 160ms var(--ease-out), background-color 160ms var(--ease-out), border-color 160ms var(--ease-out), color 160ms var(--ease-out); }
+  .institution-row:hover, .analyst-row:hover { background: #fbfdfe; }
+  .side-nav a:hover { transform: translateX(2px); }
+}
+@media (max-width:760px) {
+  .sidebar { transition: transform 220ms var(--ease-out); }
+  .landing-mobile-menu { transition: opacity 180ms var(--ease-out), transform 180ms var(--ease-out); }
+}
+@keyframes surface-enter { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes decision-enter { from { opacity: 0; transform: translateY(8px) scale(.985); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes evidence-enter { from { opacity: 0; transform: translateX(-5px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes risk-value-change { from { opacity: .45; transform: translateY(3px) scale(.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes overlay-enter { from { opacity: 0; transform: translate(-50%, -6px) scale(.98); } to { opacity: 1; transform: translate(-50%, 0) scale(1); } }
+@media (max-width:760px) {
+  .analyst-row { grid-template-columns: 30px minmax(0, 1fr) auto; }
+  .analyst-row .institution-status { font-size: 8px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-page, .demo-layout, .transfer-layout, .auth-card, .metric-card, .panel, .quick-actions > *, .analysis-context-bar, .evaluation-decision, .evaluation-evidence-row, .watch-score-value, .evaluation-score-value, .route-loading-overlay { animation: none; }
+}
+.chart-empty { min-height: 170px; display: flex; flex-direction: column; justify-content: center; gap: 8px; border: 1px dashed var(--stone-border); padding: 20px; color: var(--warm-gray); }
+.chart-empty strong { color: var(--ink); font-size: 18px; }
+.chart-empty span { color: var(--ash); font-size: 13px; }
+.operational-dot.is-warning { background: #d88b35; box-shadow: 0 0 0 5px rgba(216, 139, 53, .12); }
+.inline-success { margin: 0; padding: 9px 11px; border: 1px solid #b8e4cf; border-radius: 7px; color: #16774a; background: #f2fbf6; font-size: 11px; }
+
+.case-state{display:flex;align-items:center;gap:9px;color:var(--ash);font-size:10px}.case-status{padding:5px 8px;border-radius:999px;background:var(--surface-subtle);color:var(--warm-gray);font-size:9px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}.case-status-in_review{background:var(--review-bg);color:var(--review)}.case-status-resolved{background:var(--allow-bg);color:var(--allow)}.case-message{color:var(--cyan-edge)}.case-action-buttons{display:flex;gap:8px}.case-action-buttons .outline-control:disabled{cursor:not-allowed;opacity:.5}
+.status-in_review{color:var(--review)}.status-resolved{color:var(--allow)}
+.case-audit-panel{margin-top:16px;padding:22px}.case-audit-list{display:grid}.case-audit-row{display:grid;grid-template-columns:10px minmax(0,1fr) auto;align-items:center;gap:11px;padding:13px 0;border-bottom:1px solid #f0eeee}.case-audit-row:last-child{border-bottom:0}.audit-dot{width:6px;height:6px;border-radius:50%;background:var(--cyan);box-shadow:0 0 0 3px var(--sky-wash)}.case-audit-row strong,.case-audit-row small{display:block}.case-audit-row strong{color:var(--ink);font-size:11px;font-weight:500}.case-audit-row small{margin-top:3px;color:var(--ash);font-size:9px}.audit-request{color:var(--ash);font-size:9px}.empty-inline{margin:0;padding:18px 0 2px;color:var(--ash);font-size:10px}@media (max-width:760px){.case-audit-row{grid-template-columns:10px minmax(0,1fr)}.audit-request{grid-column:2}}
+.case-audit-row{animation:evidence-enter 180ms var(--ease-out) both}.case-audit-row:nth-child(2){animation-delay:30ms}.case-audit-row:nth-child(3){animation-delay:60ms}
+@media (prefers-reduced-motion: reduce){.case-audit-row{animation:none}}

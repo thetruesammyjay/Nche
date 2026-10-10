@@ -1,8 +1,9 @@
-from fastapi import APIRouter, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 
 from nche.schemas.risk import RiskEvaluation
+from nche.security import require_api_key
 
-router = APIRouter(prefix="/explain", tags=["explain"])
+router = APIRouter(prefix="/explain", tags=["explain"], dependencies=[Depends(require_api_key)])
 
 
 @router.get("/{evaluation_id}", response_model=RiskEvaluation)

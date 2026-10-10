@@ -12,5 +12,11 @@ services:
         value: "true"
       - key: CORS_ORIGINS
         sync: false
+      - key: NCHE_API_KEY
+        sync: false
+      - key: NCHE_ANALYST_EMAIL
+        sync: false
+      - key: NCHE_ANALYST_PASSWORD
+        sync: false
       - key: DATABASE_URL
         sync: false

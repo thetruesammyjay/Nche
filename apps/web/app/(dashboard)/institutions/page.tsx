@@ -21,10 +21,12 @@ export default function InstitutionsPage() {
   const [form, setForm] = useState<InstitutionCreate>(initialForm);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [analystRole, setAnalystRole] = useState<string | null>(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
     apiClient.listInstitutions().then(setInstitutions).catch(() => setError("The institution directory could not be reached.")).finally(() => setLoading(false));
+    fetch("/api/auth/session", { cache: "no-store" }).then((response) => response.ok ? response.json() : null).then((payload) => setAnalystRole(payload?.analyst?.role ?? null)).catch(() => setAnalystRole(null));
   }, []);
 
   async function addInstitution(event: FormEvent<HTMLFormElement>) {
@@ -62,6 +64,11 @@ export default function InstitutionsPage() {
           </div>
         </section>
         <section className="panel institution-form-panel">
+          {analystRole !== "Admin" ? <>
+          <p className="eyebrow">Administrator access</p>
+          <h2>Workspace changes are protected</h2>
+          <p className="muted">Only administrators can add institutions. Ask an administrator to create a workspace before you run an analysis.</p>
+          </> : <>
           <p className="eyebrow">Add an institution</p>
           <h2>Open another workspace</h2>
           <p className="muted">Each analysis carries the selected institution reference into the risk decision and evidence record.</p>
@@ -72,6 +79,7 @@ export default function InstitutionsPage() {
             {error && <p className="inline-error" role="alert">{error}</p>}
             <button className="cyan-button full-width" type="submit" disabled={saving}>{saving ? "Adding institution…" : "Add institution →"}</button>
           </form>
+          </>}
         </section>
       </div>
     </div>

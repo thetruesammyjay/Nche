@@ -25,10 +25,11 @@ const FALLBACK_EVALUATION: RiskEvaluateResponse = {
   latency_ms: 18,
 };
 
-export function EvaluationEvidencePanel() {
-  const [evaluation, setEvaluation] = useState<RiskEvaluateResponse>(FALLBACK_EVALUATION);
+export function EvaluationEvidencePanel({ initialEvaluation }: { initialEvaluation?: RiskEvaluateResponse } = {}) {
+  const [evaluation, setEvaluation] = useState<RiskEvaluateResponse>(initialEvaluation ?? FALLBACK_EVALUATION);
 
   useEffect(() => {
+    if (initialEvaluation) return;
     const stored = window.sessionStorage.getItem("nche:last-evaluation");
     if (!stored) return;
     try {
@@ -36,7 +37,7 @@ export function EvaluationEvidencePanel() {
     } catch {
       window.sessionStorage.removeItem("nche:last-evaluation");
     }
-  }, []);
+  }, [initialEvaluation]);
 
   const fallback = evaluation.fallback === true;
   return (

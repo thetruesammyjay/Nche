@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Brand } from "./brand";
+import type { SessionIdentity } from "../lib/session";
 
 const navigation = [
   { label: "Overview", href: "/overview", icon: "⌂" },
@@ -18,6 +19,18 @@ export function CommandShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [identity, setIdentity] = useState<SessionIdentity>({ email: "", name: "Analyst", role: "Analyst" });
+  const [today, setToday] = useState("Today");
+
+  useEffect(() => {
+    setToday(new Intl.DateTimeFormat("en-NG", { weekday: "short", day: "2-digit", month: "short", year: "numeric" }).format(new Date()));
+    const controller = new AbortController();
+    fetch("/api/auth/session", { signal: controller.signal, cache: "no-store" })
+      .then((response) => response.ok ? response.json() as Promise<{ analyst: SessionIdentity }> : null)
+      .then((payload) => { if (payload?.analyst) setIdentity(payload.analyst); })
+      .catch(() => undefined);
+    return () => controller.abort();
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -59,14 +72,14 @@ export function CommandShell({ children }: { children: React.ReactNode }) {
         </nav>
         <div className="sidebar-bottom">
           <div className="live-status"><span className="status-dot" />Live monitoring<span className="status-ping" /></div>
-          <div className="sidebar-user"><span className="user-avatar">OA</span><span><strong>Oluwaseun A.</strong><small>Analyst</small></span><button className="sidebar-logout" onClick={signOut}>Sign out</button></div>
+          <div className="sidebar-user"><span className="user-avatar">{identity.name.split(/\s+/).map((part) => part[0]).join("").slice(0, 2).toUpperCase()}</span><span><strong>{identity.name}</strong><small>{identity.role}</small></span><button className="sidebar-logout" onClick={signOut}>Sign out</button></div>
         </div>
       </aside>
       <main className="command-main">
         <header className="command-topbar">
           <button className="menu-toggle" onClick={() => setOpen(true)} aria-label="Open navigation" aria-expanded={open} aria-controls="command-sidebar">☰</button>
           <div className="topbar-breadcrumb"><span>Nche Command</span><span className="crumb-slash">/</span><strong>{navigation.find((item) => pathname === item.href || pathname.startsWith(`${item.href}/`))?.label ?? "Overview"}</strong></div>
-          <div className="topbar-actions"><button className="icon-button" aria-label="Search">⌕</button><button className="icon-button notification-button" aria-label="Notifications">♧<i /></button><span className="topbar-divider" /><span className="topbar-date">Mon, 07 Sep 2026</span></div>
+          <div className="topbar-actions"><button className="icon-button" aria-label="Search">⌕</button><button className="icon-button notification-button" aria-label="Notifications">♧<i /></button><span className="topbar-divider" /><span className="topbar-date">{today}</span></div>
         </header>
         {children}
       </main>

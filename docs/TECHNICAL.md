@@ -36,7 +36,9 @@ pnpm --filter @nche/web dev
 
 The API runs with an in-memory repository when `DATABASE_URL` is not set. The web app uses `NCHE_API_URL`, defaulting to `http://localhost:8000`.
 
-The root `.env.example` documents the shared variables. Analyst credentials are `NCHE_ANALYST_EMAIL` and `NCHE_ANALYST_PASSWORD`; the demo defaults are `analyst@nche.demo` and `demo-analyst`.
+The root `.env.example` documents the shared variables. Analyst credentials are `NCHE_ANALYST_EMAIL` and `NCHE_ANALYST_PASSWORD`; the demo defaults are `analyst@nche.demo` and `demo-analyst`. Production deployments also require a long random `NCHE_SESSION_SECRET` for signed analyst cookies and an `NCHE_API_KEY` for trusted service-to-service requests.
+
+The partner-facing request contract and curl examples are in [INTEGRATION.md](INTEGRATION.md).
 
 ## Demo routes
 
@@ -50,7 +52,7 @@ The root `.env.example` documents the shared variables. Analyst credentials are 
 | `/evaluation/new` | Build and run one analysis from scratch | Analyst session |
 | `/investigations/[caseId]` | Review event sequence and evidence | Analyst session |
 
-The analyst workspace is protected by `apps/web/middleware.ts`. The login route sets an HTTP-only session cookie, and the Command shell provides logout. This is a demonstration session mechanism; production should use an established identity provider, signed session tokens, account recovery, MFA, audit logging, and role-based access control.
+The analyst workspace is protected by `apps/web/middleware.ts`. The login BFF sends credentials to the API, which verifies a scrypt password hash in the `analyst_users` table and returns the analyst identity. The web app stores that identity in an expiring, signed HTTP-only session cookie and applies a small per-instance sign-in rate limit. Administrators can add analyst identities from Settings. MFA, account recovery, SSO, durable audit retention, and shared rate limiting at the edge remain integration work for a bank deployment.
 
 ## API endpoints
 
@@ -59,12 +61,22 @@ The FastAPI application is created in `apps/api/nche/main.py`.
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
 | `GET` | `/health` | Liveness check |
-| `GET` | `/health/ready` | Readiness and database state |
+| `GET` | `/health/ready` | Readiness and database state; production returns `503` when PostgreSQL is unavailable |
 | `POST` | `/events/ingest` | Store a normalized event |
 | `POST` | `/risk/evaluate` | Run and persist a standard risk evaluation |
 | `POST` | `/v1/evaluate_action` | Evaluate a sensitive action before submission |
 | `GET` | `/v1/institutions` | List institutions in the demo registry |
 | `POST` | `/v1/institutions` | Add an institution to the demo registry |
+| `GET` | `/v1/institutions/{institution_ref}/policy` | Read institution-specific decision bands |
+| `PUT` | `/v1/institutions/{institution_ref}/policy` | Persist institution-specific decision bands |
+| `POST` | `/v1/auth/login` | Verify analyst credentials and return the signed-in identity |
+| `GET` | `/v1/auth/analysts` | List analyst identities for an administrator |
+| `POST` | `/v1/auth/analysts` | Create an analyst identity with a hashed password |
+| `POST` | `/v1/evaluation/benchmark` | Run the reproducible synthetic holdout benchmark |
+| `GET` | `/v1/evaluations` | List persisted evaluations for analyst queues |
+| `GET` | `/v1/evaluations/{evaluation_id}/case` | Read case assignment and resolution state |
+| `PUT` | `/v1/evaluations/{evaluation_id}/case` | Assign or resolve a case and write an audit record |
+| `GET` | `/v1/evaluations/{evaluation_id}/audit` | Read the evaluation activity history |
 | `GET` | `/explain/{evaluation_id}` | Retrieve a persisted evaluation |
 
 Interactive OpenAPI documentation is available at `http://localhost:8000/docs` outside production.
@@ -98,6 +110,10 @@ The endpoint accepts:
 - `Idempotency-Key` to make retries safe.
 
 The response includes the decision, score, level, recommended action, policy rule, primary reason, institution reference, evidence, model version, mode, enforcement state, latency, and replay state.
+
+The evaluation page calls `/v1/evaluation/benchmark` through the web BFF. The harness uses a fixed seed and deterministic attack and legitimate-action holdouts. It reports precision, recall, F1, false-positive rate, scenario count, and event count. These metrics are synthetic validation evidence and must not be presented as live-bank performance.
+
+Protected API routes accept the server-only `X-Nche-API-Key` header when `NCHE_ENV=production`. The API adds an `X-Request-ID` response header to support cross-service tracing without placing customer data in logs.
 
 ```json
 {
@@ -140,7 +156,7 @@ The current action path uses deterministic rules in `apps/api/nche/engine/rules.
 | Transfer balance use | 0 below 50%; 4 at 50-75%; 10 at 75-90%; 18 at 90-100%; 25 above balance |
 | Three or more takeover signals | 15 bonus |
 
-The score is capped at 100 and classified as follows:
+The score is capped at 100 and classified using the selected institution's policy bands. New institutions start with challenge 30, review 60, and block 80; administrators can change those bands from Command settings.
 
 | Score | Level | Decision |
 | ---: | --- | --- |
@@ -160,7 +176,7 @@ The default registry in `apps/api/nche/institutions.py` includes:
 - `opay` — OPay
 - `palmpay` — PalmPay
 
-The analyst can add another institution through the Command page or `POST /v1/institutions`. Evaluations with an unknown `institution_ref` return `404`. The current registry is process-local and resets when the API restarts; the existing risk evaluation table already stores `institution_ref`, but a production institution directory needs its own persistent table and policy configuration.
+The analyst can add another institution through the Command page or `POST /v1/institutions`. Evaluations with an unknown `institution_ref` return `404`. When `DATABASE_URL` is configured, the `institutions` table persists the directory and the migration seeds the four demo institutions. Without a database, the API uses the process-local registry for development.
 
 ## Frontend/API boundary
 
@@ -169,8 +185,16 @@ The browser calls same-origin Next.js routes for protected workspace data:
 - `POST /api/risk/evaluate-action` forwards to `/v1/evaluate_action`.
 - `GET /api/institutions` forwards to `/v1/institutions`.
 - `POST /api/institutions` forwards to `/v1/institutions`.
+- `GET /api/evaluations/{evaluation_id}` retrieves persisted evidence for the analyst investigation view.
+- `GET /api/evaluations` retrieves the persisted evaluation index for alerts and investigations.
+- `GET/PUT /api/evaluations/{evaluation_id}/case` reads and updates assignment or resolution state through the analyst session.
+- `GET /api/evaluations/{evaluation_id}/audit` reads the evaluation activity history through the analyst session.
 
 The transfer demo uses a 500 ms upstream window and fails open to local institution rules when Nche is unavailable. If the API times out, the demo preserves its calculated risk preview while clearly marking the result as local rules. Its amount field updates a pre-submit risk preview using the same customer-median and balance-use calculations as the API. The from-scratch analyst analysis uses the same action contract and renders the returned institution, decision mode, latency, replay state, score, and evidence. The root layout also includes a lightweight client route-loading overlay for internal page navigation.
+
+Alerts, investigations, and the Overview page read the persisted evaluation index. Before the first evaluation they show an explicit empty state. Institution policy bands are persisted and applied to classification; beneficiary signals remain labelled as synthetic or pending integrations rather than presenting invented operational metrics. Analysts can assign an open case to themselves or mark it resolved; the status and assignee are reflected in the queue and investigation detail.
+
+After a successful analysis, the investigation page requests the evaluation by ID through the same server-side boundary. It renders the returned score, decision, institution, model version, and ordered evidence rather than replacing the response with a static case. The original seeded case remains available for the public demo when no persisted evaluation is present.
 
 ## Persistence and migrations
 
@@ -178,8 +202,13 @@ When `DATABASE_URL` is configured, SQLAlchemy uses PostgreSQL and the container 
 
 - `0001_initial` — events and risk evaluations.
 - `0002_add_idempotency_key` — safe retry storage.
+- `0003_add_institutions` — durable institution workspaces and seeded demo institutions.
+- `0004_add_analyst_users` — persistent analyst identities and password hashes.
+- `0005_add_audit_log` — append-only audit records for sensitive operations.
+- `0006_add_institution_policies` — persistent challenge, review, and block bands per institution.
+- `0007_add_case_workflow` — durable case status, assignment, and case-update timestamps on evaluations.
 
-Without `DATABASE_URL`, `InMemoryRepository` stores events and evaluations for the current process. Institution records currently use a separate in-memory registry for the demo.
+Without `DATABASE_URL`, `InMemoryRepository` stores events and evaluations for the current process, and the institution directory also stays in memory.
 
 ## Validation commands
 
@@ -197,12 +226,18 @@ Run the web type check from `apps/web`:
 node ..\..\node_modules\.pnpm\typescript@5.9.3\node_modules\typescript\bin\tsc --noEmit
 ```
 
+## Deployment variables
+
+For the API deployment, set `NCHE_ENV=production`, `DATABASE_REQUIRED=true`, `DATABASE_URL`, `CORS_ORIGINS`, a long random `NCHE_API_KEY`, `NCHE_ANALYST_EMAIL`, and `NCHE_ANALYST_PASSWORD`. Production now refuses to start without PostgreSQL even if `DATABASE_REQUIRED` is accidentally omitted. The container runs `alembic upgrade head` before Uvicorn starts and fails when the database or seed analyst is missing.
+
+For the web deployment, set `NCHE_API_URL`, the same `NCHE_API_KEY`, and `NCHE_SESSION_SECRET`. The API key is read only by server-side Next.js routes. The session secret signs the HTTP-only analyst cookie. Do not expose either secret through a `NEXT_PUBLIC_` variable.
+
 ## Production work still required
 
 The demo proves the product flow; it is not a finished production security service. Before production use, the project needs:
 
-- A real identity provider, MFA, signed sessions, roles, and audit trails.
-- Persistent institution records and institution-specific risk policies.
+- An established identity provider, MFA, account recovery, SSO, and audit trails.
+- External rate limiting and a durable session store for multi-instance deployments.
 - Secret management and environment separation.
 - Rate limits, request authentication, structured logging, monitoring, and alerting.
 - Real institution event data and validation against held-out production-like sequences.
