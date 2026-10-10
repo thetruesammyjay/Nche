@@ -5,22 +5,80 @@ import Link from "next/link";
 import Image from "next/image";
 import { NcheMascot } from "../components/nche-mascot";
 
-const sequence = [
-  ["01", "New device", "03:12:08", "device_81ab"],
-  ["02", "Password reset", "03:13:01", "53 seconds later"],
-  ["03", "New beneficiary", "03:13:19", "first seen"],
-  ["04", "High-value transfer", "03:14:02", "₦650,000 · 18.4× median"],
-];
+type Scenario = "takeover" | "normal";
+const examples = {
+  takeover: {
+    title: "Suspected account takeover",
+    description: "A new device, a new recipient, and a large transfer happen minutes apart.",
+    events: [
+      ["03:12", "New device signs in", "Device not seen on this account"],
+      ["03:13", "New beneficiary added", "First payment to this recipient"],
+      ["03:14", "₦1,000,000 transfer", "About 78% of the available balance"],
+    ],
+    recommendation: "Review or block",
+    reason: "The new device, recipient, and unusually large transfer form a risky sequence.",
+    tone: "critical",
+  },
+  normal: {
+    title: "Familiar transfer",
+    description: "A customer pays a known recipient from a device they regularly use.",
+    events: [
+      ["03:12", "Known device signs in", "Previously used on this account"],
+      ["03:13", "Saved beneficiary selected", "Recipient paid before"],
+      ["03:14", "₦25,000 transfer", "Within the customer’s usual range"],
+    ],
+    recommendation: "Allow",
+    reason: "The device, recipient, and amount match familiar account activity.",
+    tone: "safe",
+  },
+} as const;
 
 export default function LandingPage() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [scenario, setScenario] = useState<Scenario>("takeover");
+  const [visibleEvents, setVisibleEvents] = useState(2);
+  const active = examples[scenario];
   const closeMenu = () => setMenuOpen(false);
+  const selectScenario = (next: Scenario) => { setScenario(next); setVisibleEvents(2); };
 
-  return <main className="landing"><nav className={`landing-nav ${menuOpen ? "menu-open" : ""}`}><Link href="/" className="landing-brand" onClick={closeMenu}><Image src="/Nche.png" width={104} height={36} alt="Nche" priority /></Link><div className="landing-links"><a href="#why" onClick={closeMenu}>Why Nche</a><a href="#command" onClick={closeMenu}>Nche Command</a><a href="#how" onClick={closeMenu}>How it works</a></div><div className="landing-actions"><Link href="/demo" className="nav-quiet" onClick={closeMenu}>Run the demo</Link><Link href="/login?next=%2Foverview" className="nav-cta" onClick={closeMenu}>Open Command <span>↗</span></Link></div><button className="landing-menu" aria-label={menuOpen ? "Close menu" : "Open menu"} aria-expanded={menuOpen} aria-controls="landing-mobile-menu" onClick={() => setMenuOpen((value) => !value)}>{menuOpen ? "×" : "☰"}</button><div id="landing-mobile-menu" className={`landing-mobile-menu ${menuOpen ? "is-open" : ""}`}><div className="landing-mobile-links"><a href="#why" onClick={closeMenu}>Why Nche <span>↓</span></a><a href="#command" onClick={closeMenu}>Nche Command <span>↓</span></a><a href="#how" onClick={closeMenu}>How it works <span>↓</span></a><Link href="/demo" onClick={closeMenu}>Run the demo <span>↗</span></Link><Link href="/login?next=%2Foverview" className="nav-cta" onClick={closeMenu}>Open Command <span>↗</span></Link></div></div></nav>
-    <section className="landing-hero"><div className="hero-kicker"><span className="kicker-dot" />Account-takeover intelligence <span className="kicker-line" /> Built for Nigeria</div><h1>The password is correct.<br /><span className="headline-highlight">The customer is not.</span></h1><p className="hero-lead">Nche helps financial institutions understand what happens after authentication—before an unusual sequence becomes an irreversible transfer.</p><div className="hero-actions"><Link href="/login?next=%2Foverview" className="hero-cta">Explore Nche Command <span>↗</span></Link><Link href="/demo" className="hero-secondary">See the attack demo <span>→</span></Link></div><div className="hero-sentinel-card"><NcheMascot compact /><div><p className="eyebrow">Nche Sentinel / live watch</p><strong>Four signals. One clear decision.</strong><span>Watching the moments after authentication.</span></div><i className="hero-sentinel-pulse" aria-hidden="true" /></div><div className="hero-trust"><span>Decision support for</span><span className="trust-rule" /><span>banks</span><span>fintechs</span><span>PSBs</span><span>MMOs</span></div></section>
-    <section id="command" className="product-preview"><div className="preview-window"><div className="preview-chrome"><div className="window-dots"><i /><i /><i /></div><span>Nche Command <b>·</b> Overview</span><span className="preview-live"><i /> Live</span></div><div className="preview-body"><aside className="preview-sidebar"><strong><span className="mini-mark">N</span> Nche</strong><small>COMMAND</small><div className="preview-nav"><b>Overview</b><span>Alerts <em>7</em></span><span>Investigations</span><span>Beneficiaries</span><span>Evaluation</span></div><div className="preview-side-footer">● Monitoring live</div></aside><div className="preview-content"><div className="preview-heading"><div><span>NCHE COMMAND / OVERVIEW</span><h3>Good morning, analyst.</h3></div><button>Last 24 hours⌄</button></div><div className="preview-metrics"><div><span>Open investigations</span><strong>12</strong><small>3 critical · 4 high</small></div><div><span>Decisions today</span><strong>4,821</strong><small className="cyan-text">↑ 8.2% vs yesterday</small></div><div><span>Critical alerts</span><strong className="red-text">7</strong><small>Needs attention</small></div></div><div className="preview-panels"><div className="preview-alert"><div className="preview-alert-top"><span>Latest critical case</span><b>BLOCK</b></div><h4>Account takeover sequence detected</h4><p>A new device login was followed by a password reset and first-time beneficiary within 64 seconds.</p><div className="preview-sequence">{sequence.map(([id, name, time, detail]) => <div key={id}><span className="seq-id">{id}</span><span className="seq-dot" /><span className="seq-name">{name}</span><small>{time}<br />{detail}</small></div>)}</div><div className="preview-alert-foot"><strong>Risk score <b>96</b></strong><span>customer_7fd9a2</span><span>Open investigation →</span></div></div><div className="preview-chart"><span>Decision distribution</span><strong>Today <small>4,821 total</small></strong><div className="bars"><i style={{ height: "78%" }} /><i style={{ height: "63%" }} /><i style={{ height: "91%" }} /><i style={{ height: "52%" }} /><i style={{ height: "68%" }} /><i style={{ height: "84%" }} /><i style={{ height: "47%" }} /><i style={{ height: "76%" }} /></div><div className="chart-legend"><span><i className="allow-bg" />Allow 87.1%</span><span><i className="block-bg" />Block 0.6%</span></div></div></div></div></div></div><p className="preview-caption"><span>01</span> A quiet view of the signals that change a decision.</p></section>
-    <section id="why" className="landing-section split-section"><div className="section-copy"><p className="eyebrow">The problem after login</p><h2>Authentication succeeded <span>≠</span> ownership is certain.</h2><p>Fraudsters do not need to break the password when social engineering gives them the right one. Nche watches the next few minutes—the device, the reset, the recipient, the amount—and gives the institution a defensible next step.</p><Link href="/demo" className="text-link">Walk through a takeover <span>→</span></Link></div><div className="signal-card"><div className="signal-card-head"><span>SEQUENCE / CUSTOMER_7FD9A2</span><span className="signal-live"><i /> LIVE</span></div><div className="signal-card-main"><div className="signal-score"><strong>96</strong><span>critical risk</span></div><div className="signal-copy"><b>Account takeover sequence</b><p>Four signals that are ordinary alone. Together, they are not.</p></div></div><div className="signal-foot"><span>Elapsed time</span><strong>01m 54s</strong><span>Historical occurrences</span><strong>0</strong></div></div></section>
-    <section id="how" className="landing-section principles"><div className="section-heading"><p className="eyebrow">What Nche brings together</p><h2>Behaviour is a sequence, not a single event.</h2></div><div className="principle-grid"><article><span>01</span><h3>Cross-channel context</h3><p>Mobile, web, and USSD activity normalized into one customer timeline.</p></article><article><span>02</span><h3>Beneficiary intelligence</h3><p>Sender behaviour meets recipient novelty, velocity, and mule-risk signals.</p></article><article><span>03</span><h3>Explainable decisions</h3><p>Every recommendation carries the evidence object an analyst can reconstruct.</p></article></div></section>
-    <section className="landing-bottom"><div><p className="eyebrow">Ready for the sensitive action</p><h2>Make the next decision<br /><span>legible.</span></h2></div><Link href="/login?next=%2Foverview" className="hero-cta">Open Nche Command <span>↗</span></Link></section><footer className="landing-footer"><span>© 2026 Nche Risk Intelligence</span><span>Decision support. Institution-owned authority.</span><span>Built for the Nigerian digital economy.</span></footer>
-  </main>;
+  return (
+    <main className="landing">
+      <nav className={`landing-nav ${menuOpen ? "menu-open" : ""}`} aria-label="Main navigation">
+        <Link href="/" className="landing-brand" onClick={closeMenu}><Image src="/Nche.png" width={104} height={36} alt="Nche" priority /></Link>
+        <div className="landing-links"><a href="#why" onClick={closeMenu}>Why Nche</a><a href="#command" onClick={closeMenu}>Product example</a><a href="#how" onClick={closeMenu}>How it works</a></div>
+        <div className="landing-actions"><Link href="/login?next=%2Foverview" className="nav-quiet">Analyst sign in</Link><Link href="/demo" className="nav-cta">Run the demo <span aria-hidden="true">↗</span></Link></div>
+        <button className="landing-menu" type="button" aria-label={menuOpen ? "Close menu" : "Open menu"} aria-expanded={menuOpen} aria-controls="landing-mobile-menu" onClick={() => setMenuOpen(!menuOpen)}>{menuOpen ? "×" : "☰"}</button>
+        <div id="landing-mobile-menu" className={`landing-mobile-menu ${menuOpen ? "is-open" : ""}`} inert={!menuOpen}>
+          <div className="landing-mobile-links"><a href="#why" onClick={closeMenu}>Why Nche <span>↓</span></a><a href="#command" onClick={closeMenu}>Product example <span>↓</span></a><a href="#how" onClick={closeMenu}>How it works <span>↓</span></a><Link href="/demo" className="nav-cta" onClick={closeMenu}>Run the demo <span>↗</span></Link><Link href="/login?next=%2Foverview" onClick={closeMenu}>Analyst sign in <span>↗</span></Link></div>
+        </div>
+      </nav>
+      <section className="landing-hero">
+        <div className="landing-hero-copy">
+          <p className="hero-kicker"><span className="kicker-dot" /> Account-takeover intelligence · Built for Nigeria</p>
+          <h1>The password is correct.<br /><span className="headline-highlight">The customer is not.</span></h1>
+          <p className="hero-lead">Nche helps financial institutions spot suspicious activity after login, before a transfer goes through. It shows the evidence and recommends a next step; the institution makes the decision.</p>
+          <div className="hero-actions"><Link href="/demo" className="hero-cta">Run the demo <span aria-hidden="true">↗</span></Link><Link href="/login?next=%2Foverview" className="hero-secondary">Analyst sign in <span aria-hidden="true">→</span></Link></div>
+          <p className="hero-note">A guided simulation. No real payment is sent.</p>
+        </div>
+        <div className="hero-example" aria-label="Illustrative account takeover example">
+          <div className="hero-example-head"><span>ILLUSTRATIVE DEMO · TRANSFER ANALYSIS</span><NcheMascot compact /></div>
+          <div className="hero-example-events"><div><span>01</span><strong>New login</strong><small>New device</small></div><div><span>02</span><strong>New beneficiary</strong><small>First seen</small></div><div><span>03</span><strong>₦1m transfer</strong><small>78% of balance</small></div></div>
+          <div className="hero-example-decision"><span>NCHE RECOMMENDS</span><strong>Review or block</strong><p>Three linked signals turn an ordinary-looking login into a case for action.</p></div>
+        </div>
+      </section>
+      <section id="command" className="product-preview">
+        <div className="example-intro"><div><p className="eyebrow">See how the decision changes</p><h2>Same product. Different context.</h2><p>Choose a sample transfer to see the sequence, evidence, and recommendation Nche would surface.</p></div><span>Illustrative demo · Simulated events</span></div>
+        <div className="scenario-switch" role="group" aria-label="Choose a sample transfer"><button type="button" aria-pressed={scenario === "takeover"} onClick={() => selectScenario("takeover")}>Suspected takeover</button><button type="button" aria-pressed={scenario === "normal"} onClick={() => selectScenario("normal")}>Normal transfer</button></div>
+        <div className={`scenario-panel scenario-${visibleEvents === active.events.length ? active.tone : "pending"}`}>
+          <div className="scenario-overview"><span>NCHE COMMAND / EXAMPLE ANALYSIS</span><h3>{active.title}</h3><p>{active.description}</p></div>
+          <div className="scenario-content"><div className="scenario-evidence"><div className="scenario-section-heading"><strong>Event sequence</strong><span>{visibleEvents} of {active.events.length} events</span></div><div className="scenario-events" aria-live="polite" key={scenario}>{active.events.slice(0, visibleEvents).map(([time, title, detail], index) => <div className="scenario-event" key={title} style={{ animationDelay: `${index * 65}ms` }}><span className="scenario-event-index">0{index + 1}</span><div><strong>{title}</strong><small>{detail}</small></div><time>{time}</time></div>)}</div>{visibleEvents < active.events.length && <button className="scenario-add" type="button" onClick={() => setVisibleEvents(visibleEvents + 1)}>Add transfer event <span aria-hidden="true">→</span></button>}</div><div className="scenario-decision" aria-live="polite" key={`${scenario}-${visibleEvents}`}><span>Nche recommendation</span>{visibleEvents === active.events.length ? <><strong>{active.recommendation}</strong><p>{active.reason}</p></> : <><strong>Waiting for transfer</strong><p>Add the transfer event to see how Nche evaluates the complete sequence.</p></>}<small>The institution makes the final decision.</small></div></div>
+        </div>
+        <p className="preview-caption">This example uses simulated events. <Link href="/demo">Try the full transfer demo →</Link></p>
+      </section>
+      <section id="why" className="landing-section split-section"><div className="section-copy"><p className="eyebrow">The problem after login</p><h2>Authentication succeeded <span>≠</span> ownership is certain.</h2><p>Fraudsters can have the right password and still be the wrong person. Nche connects the device, recipient, amount, and timing so a financial institution can decide what to do next.</p><Link href="/demo" className="text-link">Walk through a takeover <span>→</span></Link></div><div className="signal-card"><div className="signal-card-head"><span>EXAMPLE / CUSTOMER SEQUENCE</span><span>SIMULATED</span></div><div className="signal-card-main"><div className="signal-score"><strong>3</strong><span>linked events</span></div><div className="signal-copy"><b>Account takeover pattern</b><p>Each signal can look ordinary on its own. Together, they call for a closer look.</p></div></div><div className="signal-foot"><span>Next step</span><strong>Review or block</strong></div></div></section>
+      <section id="how" className="landing-section principles"><div className="section-heading"><p className="eyebrow">What Nche brings together</p><h2>Behaviour is a sequence, not a single event.</h2></div><div className="principle-grid"><article><span>01</span><h3>Cross-channel context</h3><p>Mobile, web, and USSD activity brought into one customer timeline.</p></article><article><span>02</span><h3>Beneficiary intelligence</h3><p>Recipient novelty, transfer size, and customer behaviour considered together.</p></article><article><span>03</span><h3>Explainable decisions</h3><p>Recommendations come with evidence an analyst can review and explain.</p></article></div></section>
+      <section className="landing-bottom"><div><p className="eyebrow">See Nche in action</p><h2>Make the next decision<br /><span>legible.</span></h2></div><Link href="/demo" className="hero-cta">Run the demo <span>↗</span></Link></section>
+      <footer className="landing-footer"><span>© 2026 Nche Risk Intelligence</span><span>Decision support. Institution-owned authority.</span><span>Built for the Nigerian digital economy.</span></footer>
+    </main>
+  );
 }
