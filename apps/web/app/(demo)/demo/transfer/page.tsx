@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState } from "react";
 import type { RiskEvaluateResponse } from "@nche/types";
 import { EvaluationDecision } from "../../../../components/evaluation-decision";
+import { NcheMascot } from "../../../../components/nche-mascot";
 import { apiClient, failOpenEvaluation } from "../../../../lib/api-client";
 import { parseAmount, previewTransferRisk } from "../../../../lib/risk-preview";
 
@@ -93,7 +94,7 @@ export default function TransferPage() {
         </section>
 
         <aside className="transfer-aside">
-          <p className="eyebrow">Nche is watching</p>
+          <div className="transfer-sentinel"><NcheMascot compact /><div><p className="eyebrow">Nche is watching</p><span>Sequence context is active</span></div></div>
           <div className="watch-score"><span>Current risk</span><strong className="watch-score-value" key={evaluation?.risk_score ?? previewRisk.score}>{evaluation?.risk_score ?? previewRisk.score}</strong><small className={`watch-risk-status watch-risk-${evaluation?.risk_level ?? previewRisk.level}`}>{evaluating ? "Evaluating · pending" : fallback ? "Fallback · local rules" : submitted ? `${evaluation?.risk_level ?? "critical"} · ${evaluation?.decision.toLowerCase() ?? "blocked"}` : `${previewRisk.level} · ${previewRisk.decision}`}</small>{!submitted && <span className="watch-amount-note">{previewRisk.amountPoints > 0 || previewRisk.balancePoints > 0 ? `Transfer adds +${previewRisk.amountPoints + previewRisk.balancePoints} risk (${previewRisk.balancePoints} from balance use)` : "Amount is within the usual range"}</span>}</div>
           <div className="watch-line"><span className="watch-dot done" /><span>Login authenticated</span><small>03:12:08</small></div>
           <div className="watch-line"><span className={`watch-dot ${evaluating ? "pending" : submitted ? (fallback ? "pending" : "critical") : "pending"}`} /><span>{evaluating ? "Sending event sequence to policy" : fallback ? "Passed to local institution rules" : submitted ? "Takeover sequence detected" : "Waiting for transfer"}</span><small>{submitted ? (evaluating ? "checking" : "now") : "next event"}</small></div>
