@@ -377,9 +377,10 @@ button:disabled { cursor: wait; opacity: .68; }
 @media (prefers-reduced-motion: reduce){.case-audit-row{animation:none}}
 
 /* Sentinel visual system and scroll behavior. */
-:root { --scroll-progress: 0; --safe-top: env(safe-area-inset-top, 0px); --safe-bottom: env(safe-area-inset-bottom, 0px); }
+:root { --scroll-progress: 0; --safe-top: env(safe-area-inset-top, 0px); --safe-bottom: env(safe-area-inset-bottom, 0px); --ease-out: cubic-bezier(.23, 1, .32, 1); --ease-in-out: cubic-bezier(.77, 0, .175, 1); --ease-drawer: cubic-bezier(.32, .72, 0, 1); }
 html { scroll-behavior: smooth; scroll-padding-top: 92px; -webkit-text-size-adjust: 100%; overscroll-behavior-x: none; }
 body { min-width: 320px; overscroll-behavior-x: none; }
+.landing { overflow: visible; }
 button, a, [role="button"] { touch-action: manipulation; user-select: none; -webkit-user-select: none; }
 input, textarea, select { font-size: 16px; }
 .scroll-progress { position: fixed; z-index: 120; top: 0; left: 0; width: 100%; height: 2px; pointer-events: none; background: transparent; }
@@ -389,14 +390,23 @@ input, textarea, select { font-size: 16px; }
 .command-topbar { box-shadow: 0 1px 0 rgba(232,230,229,.8); }
 .demo-header { padding-top: var(--safe-top); height: calc(77px + var(--safe-top)); }
 .landing-hero { position: relative; }
-.hero-mascot { display: flex; justify-content: center; min-height: 170px; margin: -28px 0 5px; }
+.hero-sentinel-card { display: flex; align-items: center; gap: 12px; width: min(100%, 470px); margin: 34px auto 0; padding: 10px 14px 10px 8px; border: 1px solid #c9e8f9; border-radius: 14px; background: linear-gradient(105deg, #f3fbff, #fff); box-shadow: 0 12px 30px rgba(59,166,241,.07); text-align: left; }
+.hero-sentinel-card .nche-mascot { flex: 0 0 68px; min-height: 68px; }
+.hero-sentinel-card .nche-mascot-art { width: 68px; height: 68px; }
+.hero-sentinel-card .nche-mascot-orbit { width: 62px; height: 62px; }
+.hero-sentinel-card .nche-mascot-orbit-two { width: 76px; height: 76px; }
+.hero-sentinel-card > div { display: grid; gap: 2px; min-width: 0; }
+.hero-sentinel-card .eyebrow { margin: 0 0 2px; color: var(--cyan-edge); font-size: 9px; }
+.hero-sentinel-card strong { color: var(--ink); font-size: 13px; font-weight: 600; letter-spacing: -.015em; }
+.hero-sentinel-card > div > span { color: var(--warm-gray); font-size: 10px; }
+.hero-sentinel-pulse { width: 7px; height: 7px; flex: 0 0 auto; margin-left: auto; border-radius: 50%; background: var(--allow); box-shadow: 0 0 0 4px var(--allow-bg); animation: sentinel-beacon 1.8s var(--ease-in-out) infinite; }
 .nche-mascot { --mascot-scale: 1; position: relative; display: grid; place-items: center; width: 150px; min-height: 174px; transform: scale(var(--mascot-scale)); transform-origin: center; isolation: isolate; }
 .nche-mascot-art { position: relative; z-index: 2; width: 132px; height: 132px; overflow: visible; }
 .nche-mascot-orbit { position: absolute; z-index: 1; width: 122px; height: 122px; border: 1px solid rgba(59,166,241,.2); border-radius: 50%; pointer-events: none; }
 .nche-mascot-orbit-one { border-top-color: rgba(59,166,241,.8); transform: rotate(-25deg); animation: sentinel-orbit 10s linear infinite; }
 .nche-mascot-orbit-two { width: 145px; height: 145px; border-right-color: rgba(158,216,247,.85); transform: rotate(35deg); animation: sentinel-orbit-reverse 13s linear infinite; }
-.nche-mascot-signal { animation: sentinel-signal 2.8s ease-in-out infinite; transform-origin: center; }
-.nche-mascot-beacon { animation: sentinel-beacon 1.8s ease-in-out infinite; transform-origin: center; }
+.nche-mascot-signal { animation: sentinel-signal 2.8s var(--ease-in-out) infinite; transform-origin: center; }
+.nche-mascot-beacon { animation: sentinel-beacon 1.8s var(--ease-in-out) infinite; transform-origin: center; }
 .nche-mascot-caption { position: absolute; z-index: 3; bottom: -2px; display: grid; gap: 1px; text-align: center; white-space: nowrap; }
 .nche-mascot-caption strong { color: var(--ink); font-size: 11px; font-weight: 600; letter-spacing: -.01em; }
 .nche-mascot-caption span { color: var(--ash); font-size: 8px; letter-spacing: .08em; text-transform: uppercase; }
@@ -440,7 +450,7 @@ input, textarea, select { font-size: 16px; }
   html { scroll-padding-top: 78px; }
   .landing-nav { height: calc(68px + var(--safe-top)); }
   .demo-header { height: calc(68px + var(--safe-top)); }
-  .hero-mascot { min-height: 148px; margin-top: -19px; }
+  .hero-sentinel-card { width: 100%; margin-top: 27px; padding-right: 11px; }
   .sentinel-banner { grid-template-columns: 68px minmax(0,1fr); gap: 11px; margin-top: 0; padding: 12px; }
   .sentinel-banner .text-link { grid-column: 2; }
   .sentinel-banner h2 { font-size: 15px; }
